@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import subprocess
 import deepdish
 
 from logger import create_logger
@@ -42,13 +43,14 @@ if __name__ == "__main__":
         output_size=output_size)
 
     # Step 5. Get names of csv files from which to import replay data
-    filedir = 'Z:/1. 프로젝트/2018_삼성SDS_스타크래프트/Supervised/parsing 참조 파일/'
+    # filedir = 'Z:/1. 프로젝트/2018_삼성SDS_스타크래프트/Supervised/parsing 참조 파일/'
+    filedir = 'D:/parsingData/data(선수별)/박성균'
     filenames = get_filenames(filedir, logger=base_logger)
 
     # Step 6. Read, parse, and save replay data
     i = 0
     for filename in filenames:
-        if i == 100:
+        if i == 10:
             break
         # 6-1. Read basic information regarding the current replay
         replay_info = reader.get_replay_info(filename)
@@ -71,16 +73,20 @@ if __name__ == "__main__":
 
         # 6-5. Write replay data as a single h5 file
         win_or_lose =  get_game_result(versus=versus, against=against)
-        writedir = 'Z:/1. 프로젝트/2018_삼성SDS_스타크래프트/Supervised/train_data_sample'
+        writedir = 'D:/trainingData_v0/data(선수별)/박성균/'
         if not os.path.isdir(writedir):
             os.makedirs(writedir)
         writefile = '{}_{}_{}.h5'.format(versus, win_or_lose, replay_info.get('map_hash'))
-        parser.save(writefile=os.path.join(writedir, writefile),
-                    samples=samples,
-                    sample_infos=sample_infos,
-                    replay_info=replay_info,
-                    sparse=True)
-        base_logger.info('{} replay files have been parsed.'.format(i))
+        try:
+            parser.save(writefile=writefile,
+                        samples=samples,
+                        sample_infos=sample_infos,
+                        replay_info=replay_info,
+                        sparse=True)
+            i += 1
+            base_logger.info('{} replay files have been parsed.'.format(i))
+        except OverflowError as e:
+            base_logger.info('Unable to write; {}'.format(str(e)))
         # 8. Read back written data (optional)
         #if False:
         #    tmp = deepdish.io.load(writefile)

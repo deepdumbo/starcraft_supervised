@@ -72,7 +72,7 @@ class SimpleDataReader(AbstractDataReader):
         dataframe = pd.read_excel(filepath)
 
         mask_1 = dataframe['importance'] >= int(threshold)
-        mask_2 = dataframe['category'] == ' getType().getName()'
+        mask_2 = dataframe['category'] == 'getType().getName()'
         mask = [a * b for a, b in zip(mask_1, mask_2)]
         mask = np.array(mask, dtype=np.bool)
 
