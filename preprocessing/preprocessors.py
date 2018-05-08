@@ -15,6 +15,7 @@ import pandas as pd
 import pandas as pd
 import scipy.sparse as sp
 
+import pickle
 import deepdish
 
 
@@ -267,8 +268,9 @@ class SimpleDataParser(AbstractDataParser):
             replay_data[i].append(sample_infos[i])
 
         replay = {'replay_data': replay_data, 'replay_info': replay_info}
+        #with open(writefile, 'wb') as f:
+        #    pickle.dump(replay, f)
         deepdish.io.save(writefile, replay)
-
         self.logger.info(
             "Saving replay to '{}'".format(writefile)
         )
