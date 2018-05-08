@@ -5,8 +5,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import subprocess
-import deepdish
 
 from logger import create_logger
 from preprocessors import SimpleDataReader, SimpleDataParser
@@ -76,7 +74,7 @@ if __name__ == "__main__":
         writedir = 'D:/trainingData_v0/data(선수별)/박성균/'
         if not os.path.isdir(writedir):
             os.makedirs(writedir)
-        writefile = '{}_{}_{}_{}_{}.h5'.format(
+        writefile = '{}_{}_{}_{}_{}.pkl'.format(
             versus, win_or_lose, replay_info.get('pro'), replay_info.get('max_frame'), replay_info.get('map_hash')
         )
         try:
@@ -88,7 +86,4 @@ if __name__ == "__main__":
             i += 1
             base_logger.info('{} replay files have been parsed.'.format(i))
         except OverflowError as e:
-            base_logger.info('Unable to write; {}'.format(str(e)))
-        # 8. Read back written data (optional)
-        #if False:
-        #    tmp = deepdish.io.load(writefile)
+            base_logger.warning('Unable to write; {}'.format(str(e)))
