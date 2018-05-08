@@ -44,7 +44,19 @@ if __name__ == "__main__":
     # Step 5. Get names of csv files from which to import replay data
     # filedir = 'Z:/1. 프로젝트/2018_삼성SDS_스타크래프트/Supervised/parsing 참조 파일/'
     filedir = 'D:/parsingData/data(선수별)/박성균'
-    filenames = get_filenames(filedir, logger=base_logger)
+    filelist = get_filenames(filedir, logger=base_logger)
+
+    filenames = []
+    for f in filelist:
+        versus = reader.get_replay_info(f).get('versus')
+        if filter_filenames(versus=versus, against=against):
+            filenames.append(f)
+
+    base_logger.info(
+        '({}/{}) replays will be parsed from this directory.'.format(
+            len(filenames), len(filelist)
+        )
+    )
 
     # Step 6. Read, parse, and save replay data
     i = 0
@@ -55,29 +67,29 @@ if __name__ == "__main__":
         replay_info = reader.get_replay_info(filename)
         assert isinstance(replay_info, dict)
 
-        # 6-2. Skip current file if it does not match our interest
-        versus = replay_info.get('versus')
-        if not filter_filenames(versus=versus, against=against):
-            base_logger.info('Skipping {}, none of our interest.'.format(filename))
-            continue
-
-        # 6-3. Read sample frames from replay (at a 72-frame interval)
+        # 6-2. Read sample frames from replay (at a 72-frame interval)
         abspath = os.path.join(filedir, filename)
         replay = reader.read_frames_from_replay(abspath)
         assert isinstance(replay, list)
 
-        # 6-4. Parse replay data to a list of samples and a list of sample infos
+        # 6-3. Parse replay data to a list of samples and a list of sample infos
         samples, sample_infos = parser.parse(replay=replay)
         assert isinstance(samples, list) and isinstance(sample_infos, list)
 
-        # 6-5. Write replay data as a single h5 file
+        # 6-4. Write replay data as a single h5 file
         win_or_lose =  get_game_result(versus=versus, against=against)
         writedir = 'D:/trainingData_v0/data(선수별)/박성균/'
         if not os.path.isdir(writedir):
             os.makedirs(writedir)
+
         writefile = '{}_{}_{}_{}_{}.pkl'.format(
-            versus, win_or_lose, replay_info.get('pro'), replay_info.get('max_frame'), replay_info.get('map_hash')
+            win_or_lose,
+            replay_info.get('versus'),
+            replay_info.get('pro'),
+            replay_info.get('max_frame'),
+            replay_info.get('map_hash')
         )
+
         try:
             parser.save(writefile=os.path.join(writedir, writefile),
                         samples=samples,
@@ -85,6 +97,9 @@ if __name__ == "__main__":
                         replay_info=replay_info,
                         sparse=True)
             i += 1
-            base_logger.info('{} replay files have been parsed.'.format(i))
+            base_logger.info(
+                '{}/{} replay files have been parsed (vs {}).'.format(
+                    i, len(filenames), against)
+            )
         except OverflowError as e:
             base_logger.warning('Unable to write; {}'.format(str(e)))
