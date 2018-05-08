@@ -76,7 +76,9 @@ if __name__ == "__main__":
         writedir = 'D:/trainingData_v0/data(선수별)/박성균/'
         if not os.path.isdir(writedir):
             os.makedirs(writedir)
-        writefile = '{}_{}_{}.h5'.format(versus, win_or_lose, replay_info.get('map_hash'))
+        writefile = '{}_{}_{}_{}_{}.h5'.format(
+            versus, win_or_lose, replay_info.get('pro'), replay_info.get('max_frame'), replay_info.get('map_hash')
+        )
         try:
             parser.save(writefile=writefile,
                         samples=samples,
