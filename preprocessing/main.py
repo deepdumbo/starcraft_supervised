@@ -77,16 +77,17 @@ if __name__ == "__main__":
 
         # 6-4. Write replay data as a single h5 file
         win_or_lose =  get_game_result(versus=replay_info['versus'], against=against)
-        writedir = 'D:/trainingData_v0/data(선수별)/박성균/'
+        writedir = 'D:/trainingData_v1/data(선수별)/박성균/'
         if not os.path.isdir(writedir):
             os.makedirs(writedir)
 
-        writefile = '{}_{}_{}_{}_{}.pkl'.format(
+        writefile = '{}_{}_{}_{}_{}_{}.pkl'.format(
             win_or_lose,
             replay_info.get('versus'),
             replay_info.get('pro'),
             replay_info.get('max_frame'),
-            replay_info.get('map_hash')
+            replay_info.get('map_hash'),
+            output_size
         )
 
         try:
