@@ -61,8 +61,7 @@ if __name__ == "__main__":
     # Step 6. Read, parse, and save replay data
     i = 0
     for filename in filenames:
-        if i == 10:
-            break
+
         # 6-1. Read basic information regarding the current replay
         replay_info = reader.get_replay_info(filename)
         assert isinstance(replay_info, dict)
@@ -77,7 +76,7 @@ if __name__ == "__main__":
         assert isinstance(samples, list) and isinstance(sample_infos, list)
 
         # 6-4. Write replay data as a single h5 file
-        win_or_lose =  get_game_result(versus=versus, against=against)
+        win_or_lose =  get_game_result(versus=replay_info['versus'], against=against)
         writedir = 'D:/trainingData_v0/data(선수별)/박성균/'
         if not os.path.isdir(writedir):
             os.makedirs(writedir)
