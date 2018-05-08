@@ -5,17 +5,19 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import deepdish
+import pickle
 
 import numpy as np
 import scipy.sparse as sp
 
-filename = 'PWTL_0_9413c3e460c69a7c3488c1c7da228d83357f1ebf.h5'
+filename = 'sample.pkl'
 
 if __name__ == '__main__':
 
     # Load replay
-    replay = deepdish.io.load(filename)
+    with open(filename, 'rb') as f:
+        replay = pickle.load(f)
+
     assert isinstance(replay, dict)
     print(">>> The replay file is a dictionary with the following keys: '{}', '{}'.".format(*replay.keys()))
 
@@ -29,10 +31,13 @@ if __name__ == '__main__':
     # Get replay data
     replay_data = replay.get('replay_data')
     assert isinstance(replay_data, dict)
-    print(">>> Each key in replay data corresponds to a specific time, where its corresponding value is a list of two items.")
-    print(">>> The first item is the sample in scipy.sparse.csr_matrix, and the second item is a dictionary holding sample info.")
+    print(">>> Number of keys (#. of samples): {}".format(replay_data.keys().__len__()))
+    print(">>> Each key in 'replay_data' corresponds to a timestep, where its value is a list of two items.")
+    print(">>> The first item is the sample in scipy.sparse.csr_matrix.")
+    print(">>> The second item is a dictionary holding sample info.")
 
-    # Get sample data
+
+    # EXAMPLE 1: Get a 3D tensor, corresponding to a single frame (=one timestep)
     sample_index = 0
     assert sample_index in replay_data.keys()
     sample, sample_info = replay_data.get(sample_index)
@@ -40,6 +45,7 @@ if __name__ == '__main__':
     # Convert 'scipy.sparse.csr_matrix' back to a '2D numpy array'
     assert isinstance(sample, sp.csr_matrix)
     sample = sample.toarray()
+    print(">>> Shape of sample in 2D: {}".format(sample.shape))
 
     # Reshape 2D numpy array back into a 3D numpy array
     assert isinstance(sample, np.ndarray)
@@ -47,3 +53,12 @@ if __name__ == '__main__':
     height, width = 128, 128
     sample = sample.reshape((height, width, num_channels))
     print(">>> A single sample is a 3D numpy array of shape {}".format(sample.shape))
+
+    # Example 2: Get a 4D tensor, corresponding to a single training observation (=one replay)
+    sequence_length = len(replay_data.keys())
+    samples = [s for s, _ in replay_data.values()]  # Get first elements of 'replay_data' values
+    samples = [s.toarray() for s in samples]             # Convert each sample to a 2D numpy array
+    samples = [s.reshape((height, width, num_channels)) for s in samples]  # Reshape each sample to a 3D numpy array
+    samples = np.stack(samples, axis=0)                  # list of 3D numpy arrays => 4D numpy array
+    samples = samples.astype(np.float32)                 # change type for efficient usage of memory and speed
+    print(">>> A training observation is a 3D numpy array of shape {}".format(samples.shape))
