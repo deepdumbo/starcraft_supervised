@@ -10,6 +10,7 @@ from logger import create_logger
 from preprocessors import SimpleDataReader, SimpleDataParser
 from utils import get_filenames, filter_filenames, get_game_result
 
+
 against = 'protoss'
 output_size = 128
 
@@ -30,7 +31,7 @@ if __name__ == "__main__":
     # Step 3. Get important 'colNames'
     col_names = reader.read_column_names(
         filepath='Z:/1. 프로젝트/2018_삼성SDS_스타크래프트/Supervised/Importance_column_revised.xlsx',
-        threshold=2
+        threshold=3
     )
 
     # Step 4. Instantiate a 'DataParser'
@@ -78,7 +79,7 @@ if __name__ == "__main__":
             versus, win_or_lose, replay_info.get('pro'), replay_info.get('max_frame'), replay_info.get('map_hash')
         )
         try:
-            parser.save(writefile=writefile,
+            parser.save(writefile=os.path.join(writedir, writefile),
                         samples=samples,
                         sample_infos=sample_infos,
                         replay_info=replay_info,

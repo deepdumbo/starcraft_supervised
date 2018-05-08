@@ -12,11 +12,9 @@ import collections
 
 import numpy as np
 import pandas as pd
-import pandas as pd
 import scipy.sparse as sp
 
 import pickle
-import deepdish
 
 
 class AbstractDataReader(abc.ABC):
@@ -85,7 +83,7 @@ class SimpleDataReader(AbstractDataReader):
         )
         return result
 
-    def read_column_names(self, filepath, threshold=2):
+    def read_column_names(self, filepath, threshold=3):
         # TODO: Add function docstring.
         filepath = os.path.abspath(filepath)
         self.logger.info(
@@ -212,12 +210,25 @@ class SimpleDataParser(AbstractDataParser):
             # TODO: Consider using 'pandas.SparseDataFrame' for efficient memory
             sample_df = pd.DataFrame(frame_dict.get('data'), columns=frame_dict.get('colnames'))
             sample = self.make_sample(sample_df, output_size=self.output_size)
+            sample = sample.astype(np.float32)
 
             # Create a dictionary containing information about the current sample
             sample_info = collections.defaultdict(list)
             sample_info['channel_names'] = self.channel_keys
             for key in frame_dict.keys():
-                sample_info[key] = frame_dict[key]
+                if key == 'data':
+                    # TODO: Change this into a separate function
+                    keep_cols = [c for c in self.columns_to_keep if c not in ['getName']]
+                    sample_info['dataframe'] = sample_df[keep_cols].astype(np.int32)
+                    try:
+                        sample_info['getName'] = sample_df['getName'].astype(np.str_)
+                    except KeyError as e:
+                        print(str(e))
+                else:
+                    if key == 'colnames':
+                        continue
+                    else:
+                        sample_info[key] = frame_dict[key]
 
             # Save them in separate lists
             samples.append(sample)
@@ -268,9 +279,8 @@ class SimpleDataParser(AbstractDataParser):
             replay_data[i].append(sample_infos[i])
 
         replay = {'replay_data': replay_data, 'replay_info': replay_info}
-        #with open(writefile, 'wb') as f:
-        #    pickle.dump(replay, f)
-        deepdish.io.save(writefile, replay)
+        with open(writefile, 'wb') as f:
+            pickle.dump(replay, f)
         self.logger.info(
             "Saving replay to '{}'".format(writefile)
         )
