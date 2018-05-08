@@ -24,10 +24,6 @@ class AbstractDataReader(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_replay_info(self, filepath):
-        pass
-
-    @abc.abstractmethod
     def read_unit_names(self, filepath, threshold):
         pass
 
@@ -45,21 +41,6 @@ class SimpleDataReader(AbstractDataReader):
     def __init__(self, logger):
         self.logger = logger
         super(SimpleDataReader, self).__init__()
-
-    def get_replay_info(self, filepath):
-        # TODO: Add function docstring.
-        # Example: '투혼13_a7312474690f6e5dd86c8bf6d20616f5a201e17f_4_P_7_6_L_T_7_116_W_6624_Terran 박성균.csv'
-        replay_info = dict()
-        tokens = filepath.split('_')
-        replay_info['map_name'] = tokens[0]
-        replay_info['map_hash'] = tokens[1]
-        replay_info['num_players'] = tokens[2]
-        replay_info['location_p0'] = (tokens[4], tokens[5])
-        replay_info['location_p1'] = (tokens[8], tokens[9])
-        replay_info['versus'] = ''.join([v for i, v in enumerate(tokens) if i in [3, 6, 7, 10]])
-        replay_info['max_frame'] = tokens[11]
-        replay_info['my_race'], replay_info['pro'] = tokens[-1].split('.')[0].split(' ')
-        return replay_info
 
     def read_unit_names(self, filepath, threshold=2):
         # TODO: Add function docstring.
@@ -151,6 +132,22 @@ class SimpleDataReader(AbstractDataReader):
         return result
 
     @staticmethod
+    def get_replay_info(filepath):
+        # TODO: Add function docstring.
+        # Example: '투혼13_a7312474690f6e5dd86c8bf6d20616f5a201e17f_4_P_7_6_L_T_7_116_W_6624_Terran 박성균.csv'
+        replay_info = dict()
+        tokens = filepath.split('_')
+        replay_info['map_name'] = tokens[0]
+        replay_info['map_hash'] = tokens[1]
+        replay_info['num_players'] = tokens[2]
+        replay_info['location_p0'] = (tokens[4], tokens[5])
+        replay_info['location_p1'] = (tokens[8], tokens[9])
+        replay_info['versus'] = ''.join([v for i, v in enumerate(tokens) if i in [3, 6, 7, 10]])
+        replay_info['max_frame'] = tokens[11]
+        replay_info['my_race'], replay_info['pro'] = tokens[-1].split('.')[0].split(' ')
+        return replay_info
+
+    @staticmethod
     def remove_whitespaces(list_or_dict):
         # TODO: Add support for numpy 1D array & pandas.Series
         # FIXME: Must only remove whitespaces in the forefront
@@ -205,6 +202,7 @@ class SimpleDataParser(AbstractDataParser):
             )
         samples = list()
         sample_infos = list()
+        start = time.time()
         for i, frame_dict in enumerate(replay):
             assert isinstance(frame_dict, dict)
             # TODO: Consider using 'pandas.SparseDataFrame' for efficient memory
@@ -233,6 +231,12 @@ class SimpleDataParser(AbstractDataParser):
             # Save them in separate lists
             samples.append(sample)
             sample_infos.append(sample_info)
+
+        elapsed = time.time() - start
+        self.logger.info(
+            "({:.4} seconds) Parsed {} frames.".format(
+                elapsed, samples.__len__())
+        )
 
         return samples, sample_infos
 
@@ -266,8 +270,10 @@ class SimpleDataParser(AbstractDataParser):
         return sample
 
     def save(self, writefile, samples, sample_infos, replay_info, sparse=True):
+        """Save replay to pickle file."""
         assert len(samples) == len(sample_infos)
 
+        start = time.time()
         if sparse:
             channel_size = samples[0].shape[-1]
             samples = [np.reshape(s, (-1, channel_size)) for s in samples]
@@ -281,8 +287,10 @@ class SimpleDataParser(AbstractDataParser):
         replay = {'replay_data': replay_data, 'replay_info': replay_info}
         with open(writefile, 'wb') as f:
             pickle.dump(replay, f)
+
+        elapsed = time.time() - start
         self.logger.info(
-            "Saving replay to '{}'".format(writefile)
+            "({:.4} seconds) Saved current replay to {}.".format(elapsed, writefile)
         )
 
     @property
