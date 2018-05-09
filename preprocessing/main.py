@@ -12,7 +12,7 @@ from utils import get_filenames, filter_filenames, get_game_result
 
 
 against = 'protoss'
-output_size = 128
+output_size = 1024
 
 if __name__ == "__main__":
 
