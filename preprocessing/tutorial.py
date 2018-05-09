@@ -9,6 +9,7 @@ import pickle
 
 import numpy as np
 import scipy.sparse as sp
+import pandas as pd
 
 from utils import custom_resize
 
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     print(">>> The second item is a dictionary holding sample info.")
 
 
-    # EXAMPLE 1: Get a 3D tensor, corresponding to a single frame (=one timestep)
+    # TODO: EXAMPLE 1: Get a 3D tensor, corresponding to a single frame (=one timestep)
     sample_index = 0
     assert sample_index in replay_data.keys()
     sample, sample_info = replay_data.get(sample_index)
@@ -62,7 +63,8 @@ if __name__ == '__main__':
     sample = custom_resize(sample, output_size=output_size)
     print(">>> A single sample is a 3D numpy array of shape {} (resized)".format(sample.shape))
 
-    # Example 2: Get a 4D tensor, corresponding to a single training observation (=one replay)
+
+    # TODO: EXAMPLE 2: Get a 4D tensor, corresponding to a single training observation (=one replay)
     sequence_length = len(replay_data.keys())
     samples = [s for s, _ in replay_data.values()]       # Get first elements of 'replay_data' values
     samples = [s.toarray() for s in samples]             # Convert each sample to a 2D numpy array
@@ -75,3 +77,50 @@ if __name__ == '__main__':
     # In our case, RNNs will require 5-dimensional inputs of shape (B, T, H, W, C)
     samples = samples.reshape((1, ) + samples.shape)
     print(">>> A training observation is a 5D numpy array of shape {}".format(samples.shape))
+
+
+    # TODO: Example 3: Fog-of-war
+    sample_index = 28
+    assert sample_index in replay_data.keys()
+    sample, sample_info = replay_data.get(sample_index)
+
+    df = sample_info.get('dataframe')
+    df['getName'] = sample_info.get('getName')
+    assert isinstance(df, pd.DataFrame)
+
+    versus = replay_info.get('versus')  # i.e. 'PWTL'
+    p0 = versus[0]                      # i.e. 'P'
+    p1 = versus[2]                      # i.e. 'T'
+
+    if p0 == p1:
+        raise NotImplementedError("Games with the same tribes are not yet supported.")
+    else:
+        if p0 == 'T':
+            me = 0
+        elif p1 == 'T':
+            me = 1
+
+    channel_names = sample_info.get('channel_names')
+    channel_mask = np.zeros(shape=(num_channels, ))
+    for i, (user, gn, vis) in enumerate(zip(df['playerId'], df['getName'], df['isVisible'])):
+        # 0. Skip 'getName's that are not in channels
+        if gn not in channel_names:
+            continue
+        else:
+            if user == me:
+                # My units should always be visible
+                ch_index = channel_names.index(gn)
+                channel_mask[ch_index] = 1
+            else:
+                if vis == 1:
+                    # Some opponent's units are visible
+                    ch_index = channel_names.index(gn)
+                    channel_mask[ch_index] = 1
+                elif vis == 0:
+                    # Opponent's units not visible
+                    ch_index = channel_names.index(gn)
+                    channel_mask[ch_index] = 0
+                else:
+                    pass
+
+    assert channel_mask.shape[0] == channel_names.__len__()
