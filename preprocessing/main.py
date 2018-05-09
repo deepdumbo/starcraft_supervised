@@ -12,7 +12,8 @@ from utils import get_filenames, filter_filenames, get_game_result
 
 
 against = 'protoss'
-output_size = 1024
+output_size = 256
+player = '김경모'
 
 if __name__ == "__main__":
 
@@ -43,7 +44,7 @@ if __name__ == "__main__":
 
     # Step 5. Get names of csv files from which to import replay data
     # filedir = 'Z:/1. 프로젝트/2018_삼성SDS_스타크래프트/Supervised/parsing 참조 파일/'
-    filedir = 'D:/parsingData/data(선수별)/박성균'
+    filedir = 'D:/parsingData/data(선수별)/{}'.format(player)
     filelist = get_filenames(filedir, logger=base_logger)
 
     filenames = []
@@ -77,7 +78,7 @@ if __name__ == "__main__":
 
         # 6-4. Write replay data as a single h5 file
         win_or_lose =  get_game_result(versus=replay_info['versus'], against=against)
-        writedir = 'D:/trainingData_v2/data(선수별)/박성균/'
+        writedir = 'D:/trainingData_v2/data(선수별)/{}/'.format(player)
         if not os.path.isdir(writedir):
             os.makedirs(writedir)
 
