@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
         # 6-4. Write replay data as a single h5 file
         win_or_lose =  get_game_result(versus=replay_info['versus'], against=against)
-        writedir = 'D:/trainingData_v1/data(선수별)/박성균/'
+        writedir = 'D:/trainingData_v2/data(선수별)/박성균/'
         if not os.path.isdir(writedir):
             os.makedirs(writedir)
 
