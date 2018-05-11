@@ -13,7 +13,7 @@ from utils import get_filenames, filter_filenames, get_game_result
 
 against = 'protoss'
 output_size = 256
-player = '김경모'
+player = '이영한'
 
 if __name__ == "__main__":
 
@@ -44,11 +44,13 @@ if __name__ == "__main__":
 
     # Step 5. Get names of csv files from which to import replay data
     # filedir = 'Z:/1. 프로젝트/2018_삼성SDS_스타크래프트/Supervised/parsing 참조 파일/'
-    filedir = 'D:/parsingData/data(선수별)/{}'.format(player)
+    filedir = 'D:/parsingData/data(선수별)/{}/'.format(player)
     filelist = get_filenames(filedir, logger=base_logger)
 
     filenames = []
     for f in filelist:
+        if f.split('.')[-1] != 'csv':
+            continue
         versus = reader.get_replay_info(f).get('versus')
         if filter_filenames(versus=versus, against=against):
             filenames.append(f)
