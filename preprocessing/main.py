@@ -13,7 +13,7 @@ from utils import get_filenames, filter_filenames, get_game_result
 
 against = 'protoss'
 output_size = 256
-player = '이영한'
+player = '이재호'
 
 if __name__ == "__main__":
 
@@ -51,9 +51,14 @@ if __name__ == "__main__":
     for f in filelist:
         if f.split('.')[-1] != 'csv':
             continue
-        versus = reader.get_replay_info(f).get('versus')
-        if filter_filenames(versus=versus, against=against):
-            filenames.append(f)
+        try:
+            versus = reader.get_replay_info(f).get('versus')
+            if filter_filenames(versus=versus, against=against):
+                filenames.append(f)
+        except IndexError as e:
+            base_logger.warning(
+                "Inappropriate filename, skipping '{}'".format(f)
+            )
 
     base_logger.info(
         '({}/{}) replays will be parsed from this directory.'.format(
