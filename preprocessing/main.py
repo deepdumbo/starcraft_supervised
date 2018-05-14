@@ -18,7 +18,7 @@ player = '이재호'
 if __name__ == "__main__":
 
     # Step 0. Instantiate a 'logger'
-    base_logger = create_logger(name='base', level='INFO', stream=True, file='log_{}_{}'.format(against, player))
+    base_logger = create_logger(name='base', level='INFO', stream=True, outfile='log_{}_{}'.format(against, player))
 
     # Step 1. Instantiate a 'DataReader'
     reader = SimpleDataReader(logger=base_logger)
