@@ -101,8 +101,17 @@ class SimpleDataReader(AbstractDataReader):
                     save = True
                     continue
                 elif line[0] == 'end-activeList':
-                    frame['data'] = np.stack(frame.get('data'), axis=0)
-                    result.append(frame)
+                    try:
+                        frame['data'] = np.stack(frame.get('data'), axis=0)
+                        result.append(frame)
+                    except ValueError as e:
+                        self.logger.warning(
+                            "Unable to parse {}, ''.".format(
+                                filepath, str(e)
+                            )
+                        )
+                        return None
+
                     save = False
                     continue
                 # Save line by line into dictionary (=frame)
