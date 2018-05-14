@@ -106,7 +106,7 @@ class SimpleDataReader(AbstractDataReader):
                         result.append(frame)
                     except ValueError as e:
                         self.logger.warning(
-                            "Unable to parse {}, ''.".format(
+                            "Unable to parse {}, '{}'.".format(
                                 filepath, str(e)
                             )
                         )
