@@ -77,7 +77,10 @@ if __name__ == "__main__":
         # 6-2. Read sample frames from replay (at a 72-frame interval)
         abspath = os.path.join(filedir, filename)
         replay = reader.read_frames_from_replay(abspath)
-        assert isinstance(replay, list)
+        if replay == None:
+            continue
+        else:
+            assert isinstance(replay, list)
 
         # 6-3. Parse replay data to a list of samples and a list of sample infos
         samples, sample_infos = parser.parse(replay=replay)
