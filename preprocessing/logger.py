@@ -7,7 +7,7 @@ from __future__ import print_function
 import os
 import logging
 
-def create_logger(name, level, stream=True, file=True):
+def create_logger(name, level, stream=True, outfile=None):
     """
     Helper function which creates a logger provided its name.
     """
@@ -21,11 +21,11 @@ def create_logger(name, level, stream=True, file=True):
         streamHandler.setFormatter(formatter)
         logger.addHandler(streamHandler)
     # Add file log handlers
-    if file:
+    if outfile != None:
         logdir = './logs'
         if not os.path.isdir(os.path.abspath(logdir)):
             os.makedirs(logdir)
-        fileHandler = logging.FileHandler(os.path.join(logdir, name + '.log'))
+        fileHandler = logging.FileHandler(os.path.join(logdir, outfile + '.log'))
         fileHandler.setFormatter(formatter)
         logger.addHandler(fileHandler)
     # Set level of logger
