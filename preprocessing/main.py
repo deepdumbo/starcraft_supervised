@@ -76,8 +76,6 @@ if __name__ == "__main__":
         # 6-2. Read geographic information from mapInfo directory
         mapfilepath = 'D:/parsingData/data/mapInfo/{}.csv'.format(replay_info.get('map_hash'))
         replay_info['map_Info'] = reader.read_geographicInfo_from_mapInfo(mapfilepath)
-        
-        
         assert isinstance(replay_info, dict)
 
         # 6-3. Read sample frames from replay (at a 72-frame interval)
@@ -88,11 +86,11 @@ if __name__ == "__main__":
         else:
             assert isinstance(replay, list)
 
-        # 6-3. Parse replay data to a list of samples and a list of sample infos
+        # 6-4. Parse replay data to a list of samples and a list of sample infos
         samples, sample_infos = parser.parse(replay=replay)
         assert isinstance(samples, list) and isinstance(sample_infos, list)
 
-        # 6-4. Write replay data as a single h5 file
+        # 6-5. Write replay data as a single h5 file
         win_or_lose =  get_game_result(versus=replay_info['versus'], against=against)
         writedir = 'D:/trainingData_v2/data(선수별)/{}/'.format(player)
         if not os.path.isdir(writedir):
