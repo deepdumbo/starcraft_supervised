@@ -12,8 +12,8 @@ from utils import get_filenames, filter_filenames, get_game_result
 
 
 against = 'protoss'
-output_size = 256
-player = '이재호'
+output_size = 512
+player = '박성균'
 
 if __name__ == "__main__":
 
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
         # 6-5. Write replay data as a single h5 file
         win_or_lose =  get_game_result(versus=replay_info['versus'], against=against)
-        writedir = 'D:/trainingData_v2/data(선수별)/{}/'.format(player)
+        writedir = 'D:/trainingData_v3/data(선수별)/{}/'.format(player)
         if not os.path.isdir(writedir):
             os.makedirs(writedir)
 
