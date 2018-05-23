@@ -72,9 +72,15 @@ if __name__ == "__main__":
 
         # 6-1. Read basic information regarding the current replay
         replay_info = reader.get_replay_info(filename)
+        
+        # 6-2. Read geographic information from mapInfo directory
+        mapfilepath = 'D:/parsingData/data/mapInfo/{}.csv'.format(replay_info.get('map_hash'))
+        replay_info['map_Info'] = reader.read_geographicInfo_from_mapInfo(mapfilepath)
+        
+        
         assert isinstance(replay_info, dict)
 
-        # 6-2. Read sample frames from replay (at a 72-frame interval)
+        # 6-3. Read sample frames from replay (at a 72-frame interval)
         abspath = os.path.join(filedir, filename)
         replay = reader.read_frames_from_replay(abspath)
         if replay == None:

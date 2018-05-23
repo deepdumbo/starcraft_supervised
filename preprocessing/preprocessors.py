@@ -35,6 +35,10 @@ class AbstractDataReader(abc.ABC):
     def read_frames_from_replay(self, filepath):
         pass
 
+    @abc.abstractmethod
+    def read_geographicInfo_from_mapInfo(self, filepath):
+        pass
+
 
 class SimpleDataReader(AbstractDataReader):
     # TODO: Add class docstring.
@@ -139,7 +143,52 @@ class SimpleDataReader(AbstractDataReader):
                 elapsed, result.__len__(), filepath)
         )
         return result
-
+    
+    def read_geographicInfo_from_mapInfo(self, filepath):
+        """Reads map information from map configuration file."""
+        filepath = os.path.abspath(filepath)
+        self.logger.info(
+            "Reading game map data from {}".format(filepath)
+        )
+        arr = []
+        with open(filepath, 'r') as f:
+            reader = csv.reader(f, delimiter=' ')
+            save = False
+            for index, line in enumerate(reader):
+                if not line:
+                    continue
+                elif line[0].startswith('[Start]'):
+                    map_info = dict()
+                    continue
+                elif line[0].startswith('지나갈'):
+                    title = 'walkable'
+                    save = False
+                    continue
+                elif line[0].startswith('높이에'):
+                    map_info[title] = arr
+                    title = 'altitude'
+                    arr = []
+                    save = False
+                    continue
+                elif line[0].startswith('미네랄'):
+                    map_info[title] = arr
+                    title = 'resource'
+                    arr = []
+                    save = False
+                    continue
+                elif line[0].startswith('mapWidthWalkRes'):
+                    save = True
+                    continue
+                elif line[0].startswith('[End]'):
+                    map_info[title] = arr
+                    save = False
+                    continue
+                elif save:
+                    arr.append(line)
+                else:
+                    pass
+        return map_info
+        
     @staticmethod
     def get_replay_info(filepath):
         # TODO: Add function docstring.
