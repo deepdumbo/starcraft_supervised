@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # Step 2. Get important 'getNames'
     unit_names = reader.read_unit_names(
         filepath='Z:/1. 프로젝트/2018_삼성SDS_스타크래프트/Supervised/Importance_getName_{}.xlsx'.format(against.lower()),
-        threshold=2
+        threshold=0
     )
 
     # Step 3. Get important 'colNames'
