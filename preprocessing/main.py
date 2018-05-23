@@ -43,8 +43,8 @@ if __name__ == "__main__":
         output_size=output_size)
 
     # Step 5. Get names of csv files from which to import replay data
-    # filedir = 'Z:/1. 프로젝트/2018_삼성SDS_스타크래프트/Supervised/parsing 참조 파일/'
     filedir = 'D:/parsingData/data(선수별)/{}/'.format(player)
+    filedir = 'Y:/data(선수별)/{}/'.format(player)
     filelist = get_filenames(filedir, logger=base_logger)
 
     filenames = []
@@ -75,13 +75,14 @@ if __name__ == "__main__":
         
         # 6-2. Read geographic information from mapInfo directory
         mapfilepath = 'D:/parsingData/data/mapInfo/{}.csv'.format(replay_info.get('map_hash'))
+        mapfilepath = 'Y:/data(선수별)/mapInfo/{}.csv'.format(replay_info.get('map_hash'))
         replay_info['map_Info'] = reader.read_geographicInfo_from_mapInfo(mapfilepath)
         assert isinstance(replay_info, dict)
 
         # 6-3. Read sample frames from replay (at a 72-frame interval)
         abspath = os.path.join(filedir, filename)
         replay = reader.read_frames_from_replay(abspath)
-        if replay == None:
+        if replay is None:
             continue
         else:
             assert isinstance(replay, list)
@@ -93,6 +94,7 @@ if __name__ == "__main__":
         # 6-5. Write replay data as a single h5 file
         win_or_lose =  get_game_result(versus=replay_info['versus'], against=against)
         writedir = 'D:/trainingData_v3/data(선수별)/{}/'.format(player)
+        writedir = 'Y:/trainingData_v3/data(선수별)/{}/'.format(player)
         if not os.path.isdir(writedir):
             os.makedirs(writedir)
 
