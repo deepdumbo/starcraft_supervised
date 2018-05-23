@@ -46,7 +46,7 @@ class SimpleDataReader(AbstractDataReader):
         self.logger = logger
         super(SimpleDataReader, self).__init__()
 
-    def read_unit_names(self, filepath, threshold=2):
+    def read_unit_names(self, filepath, threshold=0):
         # TODO: Add function docstring.
         filepath = os.path.abspath(filepath)
         self.logger.info(
@@ -56,7 +56,7 @@ class SimpleDataReader(AbstractDataReader):
         dataframe = pd.read_excel(filepath)
 
         mask_1 = dataframe['importance'] >= int(threshold)
-        mask_2 = dataframe['category'] == 'getType().getName()'
+        mask_2 = dataframe['category'] == 'All_UnitTypes'
         mask = [a * b for a, b in zip(mask_1, mask_2)]
         mask = np.array(mask, dtype=np.bool)
 
