@@ -168,7 +168,10 @@ class SimpleDataReader(AbstractDataReader):
                 elif line[0].startswith('높이에'):
                     # Save first map feature
                     arr = np.asarray(arr, dtype=np.int8)
-                    assert arr.shape == (512, 512)
+                    if arr.shape != (512, 512):
+                        self.logger.warning(
+                            'Received map size of shape {}: {}'.format(arr.shape, filepath)
+                        )
                     map_info[title] = arr
                     # Reset variables for next map feature
                     title = 'altitude'
@@ -178,7 +181,10 @@ class SimpleDataReader(AbstractDataReader):
                 elif line[0].startswith('미네랄'):
                     # Save second map feature
                     arr = np.asarray(arr, dtype=np.int8)
-                    assert arr.shape == (512, 512)
+                    if arr.shape != (512, 512):
+                        self.logger.warning(
+                            'Received map size of shape {}: {}'.format(arr.shape, filepath)
+                        )
                     map_info[title] = arr
                     # Reset variables for next map feature
                     title = 'resource'
@@ -192,7 +198,10 @@ class SimpleDataReader(AbstractDataReader):
                 elif line[0].startswith('[End]'):
                     # Save third map feature
                     arr = np.asarray(arr, dtype=np.int8)
-                    assert arr.shape == (512, 512)
+                    if arr.shape != (512, 512):
+                        self.logger.warning(
+                            'Received map size of shape {}: {}'.format(arr.shape, filepath)
+                        )
                     map_info[title] = arr
                     # This will be the end of this for loop
                     save = False
