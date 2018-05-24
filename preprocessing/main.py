@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import datetime
 
 from logger import create_logger
 from preprocessors import SimpleDataReader, SimpleDataParser
@@ -17,8 +18,16 @@ player = '박성균'
 
 if __name__ == "__main__":
 
+    now = datetime.datetime.now().strftime("%Y-%m-%d_%H%M")
+
     # Step 0. Instantiate a 'logger'
-    base_logger = create_logger(name='base', level='INFO', stream=True, outfile='log_{}_{}'.format(against, player))
+    base_logger = create_logger(
+        name='base',
+        level='INFO',
+        stream=True,
+        outfile='log_{}_{}_{}'.format(
+            against, player, now)
+    )
 
     # Step 1. Instantiate a 'DataReader'
     reader = SimpleDataReader(logger=base_logger)
