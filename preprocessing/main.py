@@ -12,7 +12,7 @@ from utils import get_filenames, filter_filenames, get_game_result
 
 
 against = 'protoss'
-output_size = 512
+output_size = 256
 player = '박성균'
 
 if __name__ == "__main__":
