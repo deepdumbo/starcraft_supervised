@@ -152,6 +152,7 @@ class SimpleDataReader(AbstractDataReader):
         )
         arr = []
         with open(filepath, 'r') as f:
+            # Note that the mapInfo files use single-whitespace delimiters
             reader = csv.reader(f, delimiter=' ')
             save = False
             for index, line in enumerate(reader):
@@ -165,25 +166,39 @@ class SimpleDataReader(AbstractDataReader):
                     save = False
                     continue
                 elif line[0].startswith('높이에'):
+                    # Save first map feature
+                    arr = np.asarray(arr, dtype=np.int8)
+                    assert arr.shape == (512, 512)
                     map_info[title] = arr
+                    # Reset variables for next map feature
                     title = 'altitude'
                     arr = []
                     save = False
                     continue
                 elif line[0].startswith('미네랄'):
+                    # Save second map feature
+                    arr = np.asarray(arr, dtype=np.int8)
+                    assert arr.shape == (512, 512)
                     map_info[title] = arr
+                    # Reset variables for next map feature
                     title = 'resource'
                     arr = []
                     save = False
                     continue
                 elif line[0].startswith('mapWidthWalkRes'):
+                    # This line is redundant, save after this line
                     save = True
                     continue
                 elif line[0].startswith('[End]'):
+                    # Save third map feature
+                    arr = np.asarray(arr, dtype=np.int8)
+                    assert arr.shape == (512, 512)
                     map_info[title] = arr
+                    # This will be the end of this for loop
                     save = False
                     continue
                 elif save:
+                    # If 'save' is True, and none of above, save line
                     arr.append(line)
                 else:
                     pass
