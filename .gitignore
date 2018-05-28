@@ -1,4 +1,5 @@
 # Created to ignore files
 
 .idea/
+.vscode/
 __pycache__/
