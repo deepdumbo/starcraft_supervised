@@ -88,13 +88,15 @@ if __name__ == "__main__":
         replay_info['map_Info'] = reader.read_geographicInfo_from_mapInfo(mapfilepath)
         assert isinstance(replay_info, dict)
 
-        # 6-3. Read sample frames from replay (at a 72-frame interval)
+        # 6-3. Read sample frames and situation reports from replay (at a 72-frame interval)
         abspath = os.path.join(filedir, filename)
         replay = reader.read_frames_from_replay(abspath)
         if replay is None:
-            continue
-        else:
-            assert isinstance(replay, list)
+            continue  # Skip this replay, iterate for statement
+        situation_reports = reader.read_reports_from_replay(abspath)
+        if situation_reports is None:
+            continue  # Skip this replay, iterate for statement
+        replay_info['reports'] = situation_reports
 
         # 6-4. Parse replay data to a list of samples and a list of sample infos
         samples, sample_infos = parser.parse(replay=replay)
