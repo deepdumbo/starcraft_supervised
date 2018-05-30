@@ -32,6 +32,10 @@ class AbstractDataReader(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def read_reports_from_replay(self, filepath):
+        pass
+
+    @abc.abstractmethod
     def read_frames_from_replay(self, filepath):
         pass
 
@@ -84,12 +88,11 @@ class SimpleDataReader(AbstractDataReader):
         )
         return result
 
-    def read_frames_from_replay(self, filepath):
-        # TODO: Must also read lines between 'start - currentSituationReport' and
-        # TODO: 'end - currentSituationReport'
+    def read_reports_from_replay(self, filepath):
+        """Read situation reports from replay."""
         filepath = os.path.abspath(filepath)
         self.logger.info(
-            "Reading game replay data from {}".format(filepath)
+            "Reading situation reports from the following replay:\n{}".format(filepath)
         )
         start = time.time()
         result = list()
@@ -97,10 +100,64 @@ class SimpleDataReader(AbstractDataReader):
         with open(filepath, 'r') as f:
             reader = csv.reader(f, delimiter=',')
             for index, line in enumerate(reader):
-                # Whether to save line
                 if not line:
-                    continue  # handling empty lines
+                    continue  # skip empty lines
+                if line[0] == 'start - currentSituationReport':
+                    # Start save mode
+                    report = []
+                    colnames = None
+                    save = True
+                    continue
+                elif line[0] == 'end - currentSituationReport':
+                    try:
+                        report = np.array(report, dtype=np.int8)
+                        report = pd.DataFrame(report, columns=colnames)
+                        result.append(report)
+                    except ValueError as e:
+                        self.logger.warning(
+                            "Unable to parse {}, '{}'.".format(
+                                filepath, str(e)
+                            )
+                        )
+                        return None  # check main
+                    # End save mode
+                    save = False
+                    continue
+
+                elif save:
+                    if line[0].startswith('Frame Count'):
+                        # No need to pass
+                        pass
+                    elif line[0].startswith('playerID'):
+                        colnames = [s.replace(' ', '') for s in line]
+                    else:
+                        report['data'].append([s.replace(' ', '') for s in line])
+                else:
+                    pass
+        elapsed = time.time() - start
+        assert type(result) == list
+        self.logger.info(
+            "({:.4} seconds) Returning {} situation reports as a list from {}".format(
+                elapsed, result.__len__(), filepath)
+        )
+        return result
+
+    def read_frames_from_replay(self, filepath):
+        """Read game frames from replay."""
+        filepath = os.path.abspath(filepath)
+        self.logger.info(
+            "Reading game frames from the following replay:\n{}".format(filepath)
+        )
+        start = time.time()
+        result = list()
+        save = False
+        with open(filepath, 'r') as f:
+            reader = csv.reader(f, delimiter=',')
+            for index, line in enumerate(reader):
+                if not line:
+                    continue  # skip empty lines
                 if line[0] == 'start-activeList':
+                    # Start save mode
                     frame = collections.defaultdict(list)
                     save = True
                     continue
@@ -114,8 +171,8 @@ class SimpleDataReader(AbstractDataReader):
                                 filepath, str(e)
                             )
                         )
-                        return None
-
+                        return None  # check main
+                    # End save mode
                     save = False
                     continue
                 # Save line by line into dictionary (=frame)
@@ -319,7 +376,6 @@ class SimpleDataParser(AbstractDataParser):
             "({:.4} seconds) Parsed {} frames.".format(
                 elapsed, samples.__len__())
         )
-
         return samples, sample_infos
 
     def make_sample(self, dataframe, output_size):
@@ -353,6 +409,9 @@ class SimpleDataParser(AbstractDataParser):
 
     def save(self, writefile, samples, sample_infos, replay_info, sparse=True):
         """Save replay to pickle file."""
+        assert isinstance(samples, list)
+        assert isinstance(sample_infos, list)
+        assert isinstance(replay_info, dict)
         assert len(samples) == len(sample_infos)
 
         start = time.time()
