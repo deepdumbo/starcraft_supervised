@@ -131,7 +131,7 @@ class SimpleDataReader(AbstractDataReader):
                     elif line[0].startswith('playerID'):
                         colnames = [s.replace(' ', '') for s in line]
                     else:
-                        report['data'].append([s.replace(' ', '') for s in line])
+                        report.append([s.replace(' ', '') for s in line])
                 else:
                     pass
         elapsed = time.time() - start

@@ -29,7 +29,7 @@ if __name__ == '__main__':
     assert isinstance(replay_info, dict)
     print(">>> The replay info is a dictionary with the following keys:\n")
     for k, v in replay_info.items():
-        print("{}: {}".format(k, v))
+        print('{}: {}'.format(k, type(v)))
 
     # Get replay data
     replay_data = replay.get('replay_data')
