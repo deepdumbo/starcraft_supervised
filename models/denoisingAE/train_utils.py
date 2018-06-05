@@ -13,6 +13,14 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.client import device_lib
 
+"""
+@: Contents
+    1. func: get_available_processors
+    2. func: get_single_pair
+    3. func: generate_train_batches_from_directory
+    4. func: get_steps_per_epoch
+"""
+
 
 def get_available_processors(only_gpus=True):
     """Get the names of available processors"""
@@ -54,7 +62,7 @@ def get_single_pair(filepath, output_size=128):
     return (x_fog.astype(np.float32), x_original.astype(np.float32))
 
 
-def generate_arrays_from_directory(path_to_dir, batch_size):
+def generate_train_batches_from_directory(path_to_dir, batch_size, output_size=128):
     """Data generator to be used in the 'fit_generator' method."""
     assert batch_size % 2 == 0
     assert os.path.isdir(path_to_dir)
@@ -66,13 +74,17 @@ def generate_arrays_from_directory(path_to_dir, batch_size):
     win_names = [os.path.join(path_to_dir, x) for x in win_names]
     lose_names = [x for x in filenames if x.split('_')[0] == '0']
     lose_names = [os.path.join(path_to_dir, x) for x in lose_names]
-    steps_per_epoch = math.ceil(len(filenames) / batch_size)
+    steps_per_epoch = get_steps_per_epoch(len(filenames), batch_size)
 
     while True:
         for step in range(steps_per_epoch):
 
-            win_batch = [get_single_pair(w) for w in (random.sample(win_names, batch_size // 2))]
-            lose_batch =[get_single_pair(l) for l in (random.sample(lose_names, batch_size // 2))]
+            win_batch = [
+                get_single_pair(w, output_size) for w in (random.sample(win_names, batch_size // 2))
+            ]
+            lose_batch =[
+                get_single_pair(l, output_size) for l in (random.sample(lose_names, batch_size // 2))
+            ]
 
             total_batch = win_batch + lose_batch
 
@@ -83,3 +95,11 @@ def generate_arrays_from_directory(path_to_dir, batch_size):
             X_original = np.stack(X_original, axis=0)
 
             yield (X_fog, X_original)
+
+
+def get_steps_per_epoch(num_samples_in_epoch, batch_size):
+    """
+    Calculates number of batch iterations per epoch,
+    necessary argument to be used in 'fit_generator'.
+    """
+    return math.ceil(num_samples_in_epoch / batch_size)
