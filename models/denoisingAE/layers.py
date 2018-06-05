@@ -31,7 +31,6 @@ class DependentDense(Dense):
                  kernel_constraint=None,
                  bias_constraint=None,
                  **kwargs):
-        # assert isinstance(master_layer, Layer)
         try:
             # Compatibility with the Functional API
             self._master_layer = master_layer._keras_history[
@@ -147,8 +146,3 @@ class DependentConv2DTranspose(Conv2DTranspose):
         config = super(Conv2DTranspose, self).get_config()
         config.pop('dilation_rate')  # TODO: why? find usage
         return config
-
-
-if __name__ == '__main__':
-    print("This file is not intended to be run on its own.")
-    pass
