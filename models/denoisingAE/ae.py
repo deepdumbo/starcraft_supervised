@@ -132,8 +132,3 @@ def denoising_AE(input_shape):
 
     model = Model(inputs=[img_input], outputs=[B5_dense, recon])
     return model
-
-
-if __name__ == '__main__':
-    print("This file is not intended to be run on its own.")
-    pass
