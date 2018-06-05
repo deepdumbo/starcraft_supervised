@@ -23,6 +23,7 @@ output_size = 128
 path_to_dir = 'D:/parsingData/trainingData_v4/data(선수별)/{}/{}/'.format(player_name, output_size)
 writedir = 'D:/parsingData/trainingData_v4/by_sample/'
 
+
 def get_my_id(replay_info, token):
     """
     Get my 'playerId' from information available from 'replay_info'.
@@ -102,7 +103,15 @@ def apply_fog_of_war(sample, sample_info, me, output_size=128):
     return sp.csr_matrix(x_fog), x_original
 
 
+def apply_fog_of_war_v2(sample, sample_info, me, output_size=128):
+    # TODO: Implement this function, check feasibility.
+    raise NotImplementedError(
+        "Exposed units which are not visible should use the last seen coordinates."
+    )
+
+
 if __name__ == '__main__':
+
     filenames = os.listdir(path_to_dir)
     for filename in filenames:
 
