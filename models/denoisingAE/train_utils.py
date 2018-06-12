@@ -48,20 +48,26 @@ def get_single_pair(filepath, denoising=True, output_size=128):
         sample_dict = pickle.load(f)
         assert isinstance(sample_dict, dict)
 
-    x_fog = sample_dict.get('fog').toarray()
-    x_original = sample_dict.get('original').toarray()
-
-    assert int(np.sqrt(x_fog.shape[0])) == output_size
-    assert int(np.sqrt(x_original.shape[0])) == output_size
-    channel_size = x_fog.shape[-1]  # equivalent to x_original.shape[-1]
-
-    x_fog = x_fog.reshape((output_size, output_size, channel_size))
-    x_original = x_original.reshape((output_size, output_size, channel_size))
-    assert x_fog.shape == x_original.shape
-
     if denoising:  # input: fog, output: original
+        x_fog = sample_dict.get('fog').toarray()
+        x_original = sample_dict.get('original').toarray()
+
+        assert int(np.sqrt(x_fog.shape[0])) == output_size
+        assert int(np.sqrt(x_original.shape[0])) == output_size
+        channel_size = x_fog.shape[-1]  # equivalent to x_original.shape[-1]
+
+        x_fog = x_fog.reshape((output_size, output_size, channel_size))
+        x_original = x_original.reshape((output_size, output_size, channel_size))
+        assert x_fog.shape == x_original.shape
+
         return (x_fog.astype(np.float32), x_original.astype(np.float32))
+
     else:  # input: fog, output: fog
+        x_fog = sample_dict.get('fog').toarray()
+        assert int(np.sqrt(x_fog.shape[0])) == output_size
+        channel_size = x_fog.shape[-1]  # equivalent to x_original.shape[-1]
+        x_fog = x_fog.reshape((output_size, output_size, channel_size))
+
         return (x_fog.astype(np.float32), x_fog.astype(np.float32))
 
 
