@@ -34,7 +34,7 @@ def get_available_processors(only_gpus=True):
             return [d.name for d in local_device_protos]
 
 
-def get_single_pair(filepath, output_size=128):
+def get_single_pair(filepath, denoising=True, output_size=128):
     """
     Function only to be used in a generator.\n
     Arguments:\n
@@ -59,7 +59,10 @@ def get_single_pair(filepath, output_size=128):
     x_original = x_original.reshape((output_size, output_size, channel_size))
     assert x_fog.shape == x_original.shape
 
-    return (x_fog.astype(np.float32), x_original.astype(np.float32))
+    if denoising:  # input: fog, output: original
+        return (x_fog.astype(np.float32), x_original.astype(np.float32))
+    else:  # input: fog, output: fog
+        return (x_fog.astype(np.float32), x_fog.astype(np.float32))
 
 
 def generate_train_batches_from_directory(path_to_dir, batch_size, output_size=128):
