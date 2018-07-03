@@ -6,6 +6,7 @@ from __future__ import print_function
 
 import os
 import math
+import h5py
 import random
 import pickle
 
@@ -16,7 +17,7 @@ from tensorflow.python.client import device_lib
 """
 @: Contents
     1. func: get_available_processors
-    2. func: get_single_pair
+    2. func: get_single_pair_from_h5
     3. func: generate_train_batches_from_directory
     4. func: get_steps_per_epoch
 """
@@ -34,15 +35,9 @@ def get_available_processors(only_gpus=True):
             return [d.name for d in local_device_protos]
 
 
-def get_single_pair(filepath, denoising=True, output_size=128):
-    """
-    Function only to be used in a generator.\n
-    Arguments:\n
-        filepath: absolute path to .pkl file, of the following format;
-            i.e. path/to/dir/0_PWTL_박성균_72_b799996378ccea7369e02749015b5839dd03bf6d_128_0_over_2.pkl
-    Returns:
-        (x_fog, x_original) pairs, each of shape (W, H, C).\n
-    """
+def get_single_pair_from_pkl(filepath, denoising=True, output_size=128):
+    """Read a single sample, a dictionary of 2 scipy.sparse.csr_matrices, from .pkl file."""
+
     assert os.path.isfile(filepath)  # A full path must be provided
     with open(filepath, 'rb') as f:
         sample_dict = pickle.load(f)
@@ -60,7 +55,7 @@ def get_single_pair(filepath, denoising=True, output_size=128):
         x_original = x_original.reshape((output_size, output_size, channel_size))
         assert x_fog.shape == x_original.shape
 
-        return (x_fog.astype(np.float32), x_original.astype(np.float32))
+        return x_fog.astype(np.float32), x_original.astype(np.float32)
 
     else:  # input: fog, output: fog
         x_fog = sample_dict.get('fog').toarray()
@@ -68,11 +63,35 @@ def get_single_pair(filepath, denoising=True, output_size=128):
         channel_size = x_fog.shape[-1]  # equivalent to x_original.shape[-1]
         x_fog = x_fog.reshape((output_size, output_size, channel_size))
 
-        return (x_fog.astype(np.float32), x_fog.astype(np.float32))
+        return x_fog.astype(np.float32), x_fog.astype(np.float32)
+
+
+def get_single_pair_from_npy(filepath, denoising=True):
+    """Read a single sample of 2 numpy arrays from .npy file."""
+    assert os.path.isfile(filepath)  # A full path must be provided
+    x_fog, x_original = np.load(filepath)
+    if denoising:
+        return x_fog.astype(np.float32), x_original.astype(np.float32)
+    else:
+        return x_fog.astype(np.float32), x_fog.astype(np.float32)
+
+
+def get_single_pair_from_h5(filepath, denoising=True):
+    """Read a single sample of 2 numpy arrays from .h5 file."""
+
+    assert os.path.isfile(filepath)  # A full path must be provided
+    with h5py.File(filepath, 'rb') as h5f:
+        x_fog = h5f['fog'][:]
+        x_original = h5f['original'][:]
+    if denoising:
+        return x_fog.astype(np.float32), x_original.astype(np.float32)
+    else:
+        return x_fog.astype(np.float32), x_fog.astype(np.float32)
 
 
 def generate_train_batches_from_directory(path_to_dir, batch_size, output_size=128):
     """Data generator to be used in the 'fit_generator' method."""
+    # FIXME: Add support for all input file formats; pkl, npy, h5.
     assert batch_size % 2 == 0
     assert os.path.isdir(path_to_dir)
 
@@ -89,10 +108,10 @@ def generate_train_batches_from_directory(path_to_dir, batch_size, output_size=1
         for step in range(steps_per_epoch):
 
             win_batch = [
-                get_single_pair(w, output_size) for w in (random.sample(win_names, batch_size // 2))
+                get_single_pair_from_npy(w) for w in (random.sample(win_names, batch_size // 2))
             ]
             lose_batch =[
-                get_single_pair(l, output_size) for l in (random.sample(lose_names, batch_size // 2))
+                get_single_pair_from_npy(l) for l in (random.sample(lose_names, batch_size // 2))
             ]
 
             total_batch = win_batch + lose_batch
