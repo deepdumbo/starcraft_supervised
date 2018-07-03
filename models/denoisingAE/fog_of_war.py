@@ -21,11 +21,11 @@ import scipy.sparse as sp
 
 player_name = '박성균'
 output_size = 128
-path_to_dir = 'Y:/parsingData/trainingData_v4/data(선수별)/{}/{}/'.format(player_name, output_size)
+path_to_dir = 'Y:/trainingData_v4/data(선수별)/{}/{}/'.format(player_name, output_size)
 
 save_formats = ['pkl', 'npy', 'h5']
 save_format = save_formats[1]
-writedir = 'Y:/parsingData/trainingData_v4/by_sample_{}/'.format(save_format)
+writedir = 'Y:/parsingData_v4/by_sample_{}/'.format(save_format)
 
 
 def get_my_id(replay_info, token):
