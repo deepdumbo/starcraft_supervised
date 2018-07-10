@@ -17,9 +17,11 @@ from tensorflow.python.client import device_lib
 """
 @: Contents
     1. func: get_available_processors
-    2. func: get_single_pair_from_h5
-    3. func: generate_train_batches_from_directory
-    4. func: get_steps_per_epoch
+    2. func: get_single_pair_from_pkl
+    3. func: get_single_pair_from_npy
+    4. func: get_single_pair_from_h5
+    5. func: generate_batches_from_directory
+    6. func: get_steps_per_epoch
 """
 
 
@@ -89,19 +91,22 @@ def get_single_pair_from_h5(filepath, denoising=True):
         return x_fog.astype(np.float32), x_fog.astype(np.float32)
 
 
-def generate_train_batches_from_directory(path_to_dir, batch_size, output_size=128):
+def generate_batches_from_directory(path_to_dir, start, end, batch_size, output_size=128):
     """Data generator to be used in the 'fit_generator' method."""
     # FIXME: Add support for all input file formats; pkl, npy, h5.
+    # FIXME: one epoch = each sample is trained only once.
     assert batch_size % 2 == 0
     assert os.path.isdir(path_to_dir)
 
     filenames = os.listdir(path_to_dir)
     filenames = sorted(filenames)
+    filenames = filenames[start:end]
 
     win_names = [x for x in filenames if x.split('_')[0] == '1']
     win_names = [os.path.join(path_to_dir, x) for x in win_names]
     lose_names = [x for x in filenames if x.split('_')[0] == '0']
     lose_names = [os.path.join(path_to_dir, x) for x in lose_names]
+
     steps_per_epoch = get_steps_per_epoch(len(filenames), batch_size)
 
     while True:
