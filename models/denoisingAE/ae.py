@@ -130,5 +130,7 @@ def denoising_AE(input_shape):
         input_shape[-1], 3, master_layer=B1_conv1, use_bias=use_bias, padding='same', name='B1_conv1_prime')(B1_conv2_prime)
     recon = Activation(act, name='recon')(B1_conv1_prime)
 
-    model = Model(inputs=[img_input], outputs=[B5_dense, recon])
+    # model = Model(inputs=[img_input], outputs=[B5_dense, recon])
+    model = Model(inputs=[img_input], outputs=[recon])
+
     return model
