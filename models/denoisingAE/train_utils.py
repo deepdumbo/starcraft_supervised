@@ -101,30 +101,32 @@ def generate_batches_from_directory(path_to_dir, start, end, batch_size, output_
     filenames = os.listdir(path_to_dir)
     filenames = sorted(filenames)
     filenames = filenames[start:end]
+    filenames = [os.path.join(path_to_dir, x) for x in filenames]
 
-    win_names = [x for x in filenames if x.split('_')[0] == '1']
-    win_names = [os.path.join(path_to_dir, x) for x in win_names]
-    lose_names = [x for x in filenames if x.split('_')[0] == '0']
-    lose_names = [os.path.join(path_to_dir, x) for x in lose_names]
 
-    steps_per_epoch = get_steps_per_epoch(len(filenames), batch_size)
+
+    # win_names = [x for x in filenames if x.split('_')[0] == '1']
+    # win_names = [os.path.join(path_to_dir, x) for x in win_names]
+    # lose_names = [x for x in filenames if x.split('_')[0] == '0']
+    # lose_names = [os.path.join(path_to_dir, x) for x in lose_names]
+
+    num_samples = len(filenames)
+    steps_per_epoch = get_steps_per_epoch(num_samples, batch_size)
 
     while True:
+        np.random.shuffle(filenames)  # shuffle every epoch
         for step in range(steps_per_epoch):
 
-            win_batch = [
-                get_single_pair_from_npy(w) for w in (random.sample(win_names, batch_size // 2))
-            ]
-            lose_batch =[
-                get_single_pair_from_npy(l) for l in (random.sample(lose_names, batch_size // 2))
-            ]
+            batch_start = batch_size * step
+            batch_end = min(batch_start + batch_size, num_samples - 1)  # TODO: is -1 right?
 
-            total_batch = win_batch + lose_batch
+            filenames_batch = filenames[batch_start:batch_end]
+            pairs_batch = [get_single_pair_from_npy(filepath=x) for x in filenames_batch]
 
-            X_fog =[pair[0] for pair in total_batch]
+            X_fog =[pair[0] for pair in pairs_batch]
             X_fog = np.stack(X_fog, axis=0)
 
-            X_original = [pair[1] for pair in total_batch]
+            X_original = [pair[1] for pair in pairs_batch]
             X_original = np.stack(X_original, axis=0)
 
             yield (X_fog, X_original)
