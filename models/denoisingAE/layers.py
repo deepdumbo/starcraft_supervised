@@ -68,6 +68,11 @@ class DependentDense(Dense):
             self.bias = None
         self.built = True
 
+    def get_config(self):
+        config = super(Dense, self).get_config()
+        config['master_layer'] = self._master_layer
+        return config
+
 
 class DependentConv2DTranspose(Conv2DTranspose):
     @interfaces.legacy_deconv2d_support
@@ -145,4 +150,5 @@ class DependentConv2DTranspose(Conv2DTranspose):
     def get_config(self):
         config = super(Conv2DTranspose, self).get_config()
         config.pop('dilation_rate')  # TODO: why? find usage
+        config['master_layer'] = self._master_layer
         return config
