@@ -5,6 +5,8 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import json
+import datetime
 
 import numpy as np
 import tensorflow as tf
@@ -18,8 +20,8 @@ from ae import denoising_AE
 from train_utils import generate_batches_from_directory, get_steps_per_epoch
 
 num_classes = 2
-batch_size = 128
-epochs = 100
+batch_size = 64
+epochs = 1
 learning_rate = 0.001
 shape = (128, 128, 49)
 
@@ -32,11 +34,11 @@ if __name__ == '__main__':
 
     # TODO: Add more callbacks
     callbacks = []
-    checkpoint_dir = 'D:/parsingData/checkpoints/'
+    checkpoint_dir = './checkpoints/'
     if not os.path.isdir(checkpoint_dir):
         os.makedirs(checkpoint_dir)
     check = ModelCheckpoint(filepath=os.path.join(checkpoint_dir, 'trained_AE.h5'),
-                            monitor='val_loss',
+                            monitor='loss',
                             save_best_only=True,
                             save_weights_only=True)
     callbacks.append(check)
@@ -46,7 +48,7 @@ if __name__ == '__main__':
     total_size = len(os.listdir(data_dir))
 
     train_start = 0
-    train_end = int(total_size * 0.8)
+    train_end = int(total_size * 0.5)
     valid_start = train_end
     valid_end = total_size
 
@@ -62,12 +64,22 @@ if __name__ == '__main__':
     steps_per_epoch_train = get_steps_per_epoch(train_end, batch_size)
     steps_per_epoch_valid = get_steps_per_epoch(total_size - train_end, batch_size)
 
+    # FIXME: validation data results in error after single epoch
     model.fit_generator(generator=generator_train,
                         steps_per_epoch=steps_per_epoch_train,
                         epochs=epochs,
                         max_queue_size=batch_size * 4,
-                        validation_data=generator_valid,
-                        validation_steps=steps_per_epoch_valid,
+                        #validation_data=generator_valid,
+                        #validation_steps=steps_per_epoch_valid,
                         callbacks=callbacks,
-                        workers=8,
+                        workers=6,
                         verbose=1)
+
+    # Save model & weights
+    savedir = './trained_models/'
+    if not os.path.isdir(savedir):
+        os.makedirs(savedir)
+    now = datetime.datetime.now().strftime("%Y%m%d")
+    model.save(os.path.join(
+        savedir, 'dae_epochs_{}_{}.h5'.format(epochs, now)
+    ))

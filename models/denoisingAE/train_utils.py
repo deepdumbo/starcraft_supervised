@@ -103,8 +103,6 @@ def generate_batches_from_directory(path_to_dir, start, end, batch_size, output_
     filenames = filenames[start:end]
     filenames = [os.path.join(path_to_dir, x) for x in filenames]
 
-
-
     # win_names = [x for x in filenames if x.split('_')[0] == '1']
     # win_names = [os.path.join(path_to_dir, x) for x in win_names]
     # lose_names = [x for x in filenames if x.split('_')[0] == '0']
