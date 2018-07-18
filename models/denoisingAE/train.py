@@ -76,10 +76,10 @@ if __name__ == '__main__':
                         verbose=1)
 
     # Save model & weights
-    savedir = './trained_models/'
+    now = datetime.datetime.now().strftime("%Y%m%d")
+    savedir = './trained_models/{}'.format(now)
     if not os.path.isdir(savedir):
         os.makedirs(savedir)
-    now = datetime.datetime.now().strftime("%Y%m%d")
-    model.save(os.path.join(
-        savedir, 'dae_epochs_{}_{}.h5'.format(epochs, now)
-    ))
+
+    model.save_weights(os.path.join(savedir, 'weights_epochs_{}_{}.h5'.format(epochs)))
+    json.dump(model.to_json(), os.path.join(savedir, 'model.json'))
