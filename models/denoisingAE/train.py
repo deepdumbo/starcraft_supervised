@@ -37,7 +37,7 @@ if __name__ == '__main__':
     checkpoint_dir = './checkpoints/'
     if not os.path.isdir(checkpoint_dir):
         os.makedirs(checkpoint_dir)
-    check = ModelCheckpoint(filepath=os.path.join(checkpoint_dir, 'trained_AE.h5'),
+    check = ModelCheckpoint(filepath=os.path.join(checkpoint_dir, 'trained_dae.h5'),
                             monitor='loss',
                             save_best_only=True,
                             save_weights_only=True)
