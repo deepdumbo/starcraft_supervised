@@ -81,4 +81,6 @@ if __name__ == '__main__':
         savedir = './trained_models/{}/'.format(now)
         if not os.path.isdir(savedir):
             os.makedirs(savedir)
-        model.save_weights(os.path.join(savedir, 'weights_epochs_{}.h5'.format(epochs)))
+        single_model = [l for l in model.layers if l.name == 'model_1']
+        assert len(single_model) == 1; single_model = single_model[0]
+        single_model.save_weights(os.path.join(savedir, 'weights_epochs_{}.h5'.format(epochs)))
