@@ -64,25 +64,21 @@ if __name__ == '__main__':
     steps_per_epoch_train = get_steps_per_epoch(train_end, batch_size)
     steps_per_epoch_valid = get_steps_per_epoch(total_size - train_end, batch_size)
 
-    # FIXME: validation data results in error after single epoch
-    model.fit_generator(generator=generator_train,
-                        steps_per_epoch=steps_per_epoch_train,
-                        epochs=epochs,
-                        max_queue_size=batch_size * 4,
-                        #validation_data=generator_valid,
-                        #validation_steps=steps_per_epoch_valid,
-                        callbacks=callbacks,
-                        workers=6,
-                        verbose=1)
-
-    # Save model & weights
-    now = datetime.datetime.now().strftime("%Y%m%d")
-    savedir = './trained_models/{}/'.format(now)
-    if not os.path.isdir(savedir):
-        os.makedirs(savedir)
-
-    model.save_weights(os.path.join(savedir, 'weights_epochs_{}.h5'.format(epochs)))
-    model_json = model.to_json()
-    with open(os.path.join(savedir, 'model.json'), 'w') as json_file:
-        json_file.write(model_json)
-        
+    try:
+        # FIXME: validation data results in error after single epoch
+        model.fit_generator(generator=generator_train,
+                            steps_per_epoch=steps_per_epoch_train,
+                            epochs=epochs,
+                            max_queue_size=batch_size * 4,
+                            #validation_data=generator_valid,
+                            #validation_steps=steps_per_epoch_valid,
+                            callbacks=callbacks,
+                            workers=6,
+                            verbose=1)
+    except KeyboardInterrupt:
+        # Save model & weights
+        now = datetime.datetime.now().strftime("%Y%m%d")
+        savedir = './trained_models/{}/'.format(now)
+        if not os.path.isdir(savedir):
+            os.makedirs(savedir)
+        model.save_weights(os.path.join(savedir, 'weights_epochs_{}.h5'.format(epochs)))
