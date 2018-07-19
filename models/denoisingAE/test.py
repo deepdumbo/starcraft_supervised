@@ -25,9 +25,10 @@ if __name__ == "__main__":
     data_dir = 'D:/parsingData/parsingData_v4/by_sample_npy/'
     filelist = os.listdir(data_dir)
 
-    for file in tqdm(filelist):
-        x_fog, x_original = get_single_pair_from_npy(file, denoising=True)
-        x_pred = model.predict(x_fog)
+    for i, file in tqdm(enumerate(filelist)):
+        x_fog, x_original = get_single_pair_from_npy(os.path.join(data_dir, file), denoising=True)
+        x_pred = model.predict(np.expand_dims(x_fog, axis=0))
+        x_pred = np.squeeze(x_pred, 0)
 
         x_fog = sp.csr_matrix(x_fog.reshape((-1, 49)))
         x_original = sp.csr_matrix(x_original.reshape((-1, 49)))
@@ -36,5 +37,8 @@ if __name__ == "__main__":
         writedir = './reconstructed/'
         if not os.path.isdir(writedir):
             os.makedirs(writedir)
-        with open(writedir + file.split('.')[0] + '.pkl', 'wb') as f:
+        with open(writedir + file.split('.')[0] + '_reconstructed.pkl', 'wb') as f:
             pickle.dump([x_fog, x_original, x_pred], f)
+
+        if i + 1 == 10000:
+            break
