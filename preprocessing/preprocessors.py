@@ -8,6 +8,7 @@ import abc
 import os
 import csv
 import time
+import itertools
 import collections
 
 import numpy as np
@@ -45,31 +46,39 @@ class AbstractDataReader(abc.ABC):
 
 
 class SimpleDataReader(AbstractDataReader):
-    # TODO: Add class docstring.
+    """SimpleDataReader."""
     def __init__(self, logger):
         self.logger = logger
         super(SimpleDataReader, self).__init__()
 
-    def read_unit_names(self, filepath, threshold=0):
+    def read_unit_names(self, filepath):
         # TODO: Add function docstring.
         filepath = os.path.abspath(filepath)
         self.logger.info(
             "Reading unit names from {}".format(filepath)
         )
 
-        dataframe = pd.read_excel(filepath)
+        with open(filepath, 'r') as f:
+            lines = f.readlines()
+            lines = [l.strip() for l in lines]
 
-        mask_1 = dataframe['importance'] >= int(threshold)
-        mask_2 = dataframe['category'] == 'All_UnitTypes'
-        mask = [a * b for a, b in zip(mask_1, mask_2)]
-        mask = np.array(mask, dtype=np.bool)
+        splitters = ['[Protoss_Units]',
+                     '[Protoss_Buildings]',
+                     '[Terran_Units]',
+                     '[Terran_Buildings]'
+                     ]
 
-        result = dataframe.get('getName')[mask]
-        result = result.tolist()
-        result = self.remove_whitespaces(result)
+        result = {}
+        for k, g in itertools.groupby(lines, lambda s: s in splitters):
+            if k:
+                key = list(g)[0][1:-1]  # ex. [example] --> example
+            else:
+                result[key] = list(g)
+
         self.logger.info(
-            "Returning important {} unit names.".format(result.__len__())
+            "Returning {} important unit names.".format(result.__len__())
         )
+
         return result
 
     def read_column_names(self, filepath, threshold=3):
