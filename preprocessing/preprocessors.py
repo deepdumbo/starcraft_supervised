@@ -335,7 +335,7 @@ class SimpleDataParser(AbstractDataParser):
     # TODO: Add class docstring.
     def __init__(self, logger, units_to_keep, columns_to_keep, output_size):
         self.logger = logger
-        self.units_to_keep = units_to_keep
+        self.units_to_keep = units_to_keep  # Do not use this attribute
         self.columns_to_keep = columns_to_keep
         self.channel_keys = self.make_channel_keys()
         self.output_size = output_size
@@ -401,12 +401,12 @@ class SimpleDataParser(AbstractDataParser):
                 "Expected a 'pandas.DataFrame', received {}.".format(type(dataframe))
             )
 
-        if isinstance(self.units_to_keep, list):
-            sample = dict([(k, np.zeros(shape=(output_size, output_size))) for k in self.units_to_keep])
+        if isinstance(self.channel_keys, list):
+            sample = dict([(k, np.zeros(shape=(output_size, output_size))) for k in self.channel_keys])
 
         for i, row in dataframe.iterrows():
             unit_type = row['getName']  # This must correspond to a distinct channel
-            if unit_type in self.units_to_keep:
+            if unit_type in self.channel_keys:
                 pos_x = int(row['getPosition.x']) * output_size // self.original_size
                 pos_y = int(row['getPosition.y']) * output_size // self.original_size
                 assert (pos_x, pos_y) <= (output_size, output_size)
@@ -445,13 +445,22 @@ class SimpleDataParser(AbstractDataParser):
 
     @property
     def num_channels(self):
+        # FIXME: deprecated, REMOVE!
         return len(self.units_to_keep) * len(self.columns_to_keep)
 
     def make_channel_keys(self):
         if isinstance(self.units_to_keep, list):
             return self.units_to_keep
+        elif isinstance(self.units_to_keep, dict):
+            as_list = []
+            for k, v in self.units_to_keep.items():
+                as_list.extend(v)
+            return as_list
+        else:
+            raise ValueError
 
     def make_channel_keys_v2(self):
+        # FIXME: deprecated, REMOVE!
         if isinstance(self.units_to_keep, list) and isinstance(self.columns_to_keep, list):
             return ["_".join([i, j]) for i in self.units_to_keep for j in self.columns_to_keep]
         else:

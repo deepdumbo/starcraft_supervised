@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
@@ -85,7 +86,7 @@ if __name__ == "__main__":
         # 6-2. Read geographic information from mapInfo directory
         mapfilepath = 'D:/parsingData/data/mapInfo/{}.csv'.format(replay_info.get('map_hash'))
         mapfilepath = 'Y:/data(선수별)/mapInfo/{}.csv'.format(replay_info.get('map_hash'))
-        replay_info['map_Info'] = reader.read_geographicInfo_from_mapInfo(mapfilepath)
+        replay_info['map_info'] = reader.read_geographicInfo_from_mapInfo(mapfilepath)
         assert isinstance(replay_info, dict)
 
         # 6-3. Read sample frames and situation reports from replay (at a 72-frame interval)
@@ -104,8 +105,8 @@ if __name__ == "__main__":
 
         # 6-5. Write replay data as a single h5 file
         win_or_lose =  get_game_result(versus=replay_info['versus'], against=against)
-        writedir = 'D:/trainingData_v4/data(선수별)/{}/{}'.format(player, output_size)
-        writedir = 'Y:/trainingData_v4/data(선수별)/{}/{}'.format(player, output_size)
+        writedir = 'D:/trainingData_v9/data(선수별)/{}/{}'.format(player, output_size)
+        writedir = 'Y:/trainingData_v9/data(선수별)/{}/{}'.format(player, output_size)
         if not os.path.isdir(writedir):
             os.makedirs(writedir)
 
