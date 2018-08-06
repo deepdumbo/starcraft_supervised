@@ -12,6 +12,9 @@ import numpy as np
 import pandas as pd
 import scipy.sparse as sp
 
+from tqdm import tqdm
+from logger import create_logger
+
 """
 @: Contents
     1. func: get_my_id(replay_info, token)
@@ -21,11 +24,11 @@ import scipy.sparse as sp
 
 player_name = '박성균'
 output_size = 128
-path_to_dir = 'Y:/trainingData_v4/data(선수별)/{}/{}/'.format(player_name, output_size)
+data_dir = 'Y:/trainingData_v9/data(선수별)/{}/{}/'.format(player_name, output_size)
 
 save_formats = ['pkl', 'npy', 'h5']
-save_format = save_formats[1]
-writedir = 'Y:/parsingData_v4/by_sample_{}/'.format(save_format)
+save_format = save_formats[0]
+write_dir = 'Y:/trainingData_v9/data(sample)/{}'.format(player_name)
 
 
 def get_my_id(replay_info, token):
@@ -123,35 +126,46 @@ def apply_fog_of_war_v2(sample, sample_info, me, output_size=128):
 
 if __name__ == '__main__':
 
-    filenames = os.listdir(path_to_dir)
-    for filename in filenames:
+    # Create logger instance
+    logger = create_logger(name='fog_of_war', level='INFO', stream=True,
+                           outfile='fog_{}_{}'.format(player_name, save_format))
 
-        # Open pickle file
-        with open(os.path.join(path_to_dir, filename), 'rb') as f:
+    # Get list of pickle replay files
+    filenames = os.listdir(data_dir)
+    logger.info("Parsing {} replays to sample-level pkl files...".format(len(filenames)))
+
+    for i, filename in enumerate(filenames):
+
+        # Open pickle file (1 pickle = 1 replay)
+        with open(os.path.join(data_dir, filename), 'rb') as f:
             replay_data, replay_info = pickle.load(f).values()
             assert isinstance(replay_data, dict)
             assert isinstance(replay_info, dict)
 
-        num_samples = replay_data.keys().__len__()
+        num_samples = len(replay_data.keys())
 
         # Get my playerID in current replay
         me = get_my_id(replay_info, token='Terran')
         assert me in [0, 1]
 
         # Iterate over frames, make (x_fog, x_original) pairs, save to file
-        for k, (sample, sample_info) in replay_data.items():
-
-            x_fog, x_original = apply_fog_of_war(sample, sample_info, me, output_size)
-
+        for k, (sample, sample_info) in tqdm(replay_data.items()):
+            assert isinstance(sample, sp.csr_matrix)
+            assert isinstance(sample_info, dict)
+            x_fog, x_original = apply_fog_of_war(sample=sample,
+                                                 sample_info=sample_info,
+                                                 me=me,
+                                                 output_size=output_size)
 
             fname = filename.split('.')[0]
-            if not os.path.isdir(writedir):
-                os.makedirs(writedir)
+            if not os.path.isdir(write_dir):
+                os.makedirs(write_dir)
 
             # Save method 1: save dictionary of two csr_matrices to .pkl file
             if save_format == 'pkl':
-                writefile = '{}_{}_over_{}.h5'.format(fname, k, num_samples)
-                with open(os.path.join(writedir, writefile), 'wb') as f:
+                writefile = '{}_{}_over_{}.pkl'.format(fname, k, num_samples)
+                with open(os.path.join(write_dir, writefile), 'wb') as f:
+                    # Save samples as sparse matrices (for memory issues)
                     x_fog = x_fog.reshape((-1, x_fog.shape[-1]))
                     x_original = x_original.reshape((-1, x_original.shape[-1]))
                     result = {'fog': x_fog,
@@ -166,13 +180,14 @@ if __name__ == '__main__':
             # Save method 3: save 2 numpy arrays to .h5 file
             elif save_format == 'h5':
                 writefile = '{}_{}_over_{}.h5'.format(fname, k, num_samples)
-                with h5py.File(os.path.join(writedir, writefile), 'wb') as h5f:
+                with h5py.File(os.path.join(write_dir, writefile), 'wb') as h5f:
                     h5f.create_dataset('fog', data=x_fog)
                     h5f.create_dataset('original', data=x_original)
 
             else:
                 raise ValueError("file format '{}' not supported.".format(save_format))
 
-        print(">>> {} has been parsed at a sample-level with fog-of-war; {} samples.".format(
-            filename, num_samples)
-        )
+
+        logger.info("[{:>4}/{:>4}] Parsed replay to {} samples, with fog-of-war.".format(
+            i + 1, len(filenames), num_samples
+        ))
