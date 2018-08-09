@@ -114,7 +114,7 @@ def apply_fog_of_war(sample, sample_info, me, output_size=128):
     assert (x_fog.shape == x_original.shape)
     assert isinstance(x_fog, np.ndarray) and isinstance(x_original, np.ndarray)
 
-    return x_fog, x_original
+    return x_fog.astype(np.uint8), x_original.astype(np.uint8)
 
 
 def apply_fog_of_war_v2(sample, sample_info, me, output_size=128):
