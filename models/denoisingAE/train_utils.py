@@ -9,6 +9,7 @@ import math
 import h5py
 import random
 import pickle
+import itertools
 
 import numpy as np
 import tensorflow as tf
@@ -37,7 +38,45 @@ def get_available_processors(only_gpus=True):
             return [d.name for d in local_device_protos]
 
 
-def get_single_pair_from_pkl(filepath, denoising=True, output_size=128):
+def get_channel_index(filepath, channel_type='buildings'):
+
+    # Read channel names from file
+    with open(filepath, 'r') as f:
+        lines = f.readlines()
+        lines = [l.strip() for l in lines]
+
+    # Splitting tokens
+    splitters = ['[Protoss_Units]',
+                 '[Protoss_Buildings]',
+                 '[Terran_Units]',
+                 '[Terran_Buildings]']
+
+    # Make list of (split_token, channel_name) tuples
+    pairs = []
+    for l in lines:
+        if l in splitters:
+            key = l
+            continue
+        else:
+            pairs.append((key, l))
+
+    # Channel types to keep
+    if channel_type == 'units':
+        valid_keys = [splitters[0], splitters[2]]
+    if channel_type == 'buildings':
+        valid_keys = [splitters[1], splitters[3]]
+
+    channel_index = []
+    for i, pair in enumerate(pairs):
+        if pair[0] in valid_keys:
+            channel_index.append(i)
+        else:
+            continue
+
+    return channel_index
+
+
+def get_single_pair_from_pkl(filepath, fog=True, output_size=128):
     """Read a single sample, a dictionary of 2 scipy.sparse.csr_matrices, from .pkl file."""
 
     assert os.path.isfile(filepath)  # A full path must be provided
@@ -45,68 +84,88 @@ def get_single_pair_from_pkl(filepath, denoising=True, output_size=128):
         sample_dict = pickle.load(f)
         assert isinstance(sample_dict, dict)
 
-    if denoising:  # input: fog, output: original
+    channel_index = get_channel_index('../../preprocessing/data/UNITS_PROTOSS_TERRAN.txt',
+                                      channel_type='buildings')
+    channel_index = np.array(channel_index, dtype=np.int8)
+
+    if fog:  # input: fog, output: original
         x_fog = sample_dict.get('fog').toarray()
         x_original = sample_dict.get('original').toarray()
 
         assert int(np.sqrt(x_fog.shape[0])) == output_size
         assert int(np.sqrt(x_original.shape[0])) == output_size
-        channel_size = x_fog.shape[-1]  # equivalent to x_original.shape[-1]
+        channel_size = x_fog.shape[-1]
 
         x_fog = x_fog.reshape((output_size, output_size, channel_size))
         x_original = x_original.reshape((output_size, output_size, channel_size))
+
+        x_fog = x_fog[:, :, channel_index]
+        x_original = x_original[:, :, channel_index]
         assert x_fog.shape == x_original.shape
 
         return x_fog.astype(np.float32), x_original.astype(np.float32)
 
-    else:  # input: fog, output: fog
-        x_fog = sample_dict.get('fog').toarray()
-        assert int(np.sqrt(x_fog.shape[0])) == output_size
-        channel_size = x_fog.shape[-1]  # equivalent to x_original.shape[-1]
-        x_fog = x_fog.reshape((output_size, output_size, channel_size))
+    else:  # input: original, output: original
+        x_original = sample_dict.get('original').toarray()
+        assert int(np.sqrt(x_original.shape[0])) == output_size
+        channel_size = x_original.shape[-1]
+        x_original = x_original.reshape((output_size, output_size, channel_size))
+        x_original = x_original[:, :, channel_index]
 
-        return x_fog.astype(np.float32), x_fog.astype(np.float32)
+        return x_original.astype(np.float32), x_original.astype(np.float32)
 
 
-def get_single_pair_from_npy(filepath, denoising=True):
+def get_single_pair_from_npy(filepath, fog=True):
     """Read a single sample of 2 numpy arrays from .npy file."""
     assert os.path.isfile(filepath)  # A full path must be provided
     x_fog, x_original = np.load(filepath)
-    if denoising:
+    if fog:
         return x_fog.astype(np.float32), x_original.astype(np.float32)
     else:
-        return x_fog.astype(np.float32), x_fog.astype(np.float32)
+        return x_original.astype(np.float32), x_original.astype(np.float32)
 
 
-def get_single_pair_from_h5(filepath, denoising=True):
+def get_single_pair_from_h5(filepath, fog=True):
     """Read a single sample of 2 numpy arrays from .h5 file."""
-
     assert os.path.isfile(filepath)  # A full path must be provided
     with h5py.File(filepath, 'rb') as h5f:
         x_fog = h5f['fog'][:]
         x_original = h5f['original'][:]
-    if denoising:
+    if fog:
         return x_fog.astype(np.float32), x_original.astype(np.float32)
     else:
-        return x_fog.astype(np.float32), x_fog.astype(np.float32)
+        return x_original.astype(np.float32), x_original.astype(np.float32)
 
 
-def generate_batches_from_directory(path_to_dir, start, end, batch_size, output_size=128):
+def generate_batches_from_directory(path_to_dir, file_format,
+                                    start=None, end=None,
+                                    batch_size=32, output_size=128):
     """Data generator to be used in the 'fit_generator' method."""
-    # FIXME: Add support for all input file formats; pkl, npy, h5.
     # FIXME: one epoch = each sample is trained only once.
+
+    if file_format == 'pkl':
+        get_single_pair = get_single_pair_from_pkl
+    elif file_format == 'npy':
+        get_single_pair = get_single_pair_from_npy
+    elif file_format == 'h5':
+        get_single_pair = get_single_pair_from_h5
+    else:
+        raise ValueError
+
     assert batch_size % 2 == 0
     assert os.path.isdir(path_to_dir)
 
     filenames = os.listdir(path_to_dir)
     filenames = sorted(filenames)
-    filenames = filenames[start:end]
-    filenames = [os.path.join(path_to_dir, x) for x in filenames]
 
-    # win_names = [x for x in filenames if x.split('_')[0] == '1']
-    # win_names = [os.path.join(path_to_dir, x) for x in win_names]
-    # lose_names = [x for x in filenames if x.split('_')[0] == '0']
-    # lose_names = [os.path.join(path_to_dir, x) for x in lose_names]
+    if (start is None) or (end is None):
+        start = 0
+        end = len(filenames)
+    else:
+        pass
+
+    filenames = filenames[start:end]
+    filenames = [os.path.join(path_to_dir, x) for x in filenames]  # relative path -> absolute path
 
     num_samples = len(filenames)
     steps_per_epoch = get_steps_per_epoch(num_samples, batch_size)
@@ -116,10 +175,10 @@ def generate_batches_from_directory(path_to_dir, start, end, batch_size, output_
         for step in range(steps_per_epoch):
 
             batch_start = batch_size * step
-            batch_end = min(batch_start + batch_size, num_samples - 1)  # TODO: is -1 right?
+            batch_end = min(batch_start + batch_size, num_samples - 1)
 
             filenames_batch = filenames[batch_start:batch_end]
-            pairs_batch = [get_single_pair_from_npy(filepath=x) for x in filenames_batch]
+            pairs_batch = [get_single_pair(filepath=x) for x in filenames_batch]
 
             X_fog =[pair[0] for pair in pairs_batch]
             X_fog = np.stack(X_fog, axis=0)

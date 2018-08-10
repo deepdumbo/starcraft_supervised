@@ -68,6 +68,11 @@ class DependentDense(Dense):
             self.bias = None
         self.built = True
 
+    def get_config(self):
+        config = {'master_layer': self._master_layer}
+        base_config = super(DependentDense, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
 
 class DependentConv2DTranspose(Conv2DTranspose):
     @interfaces.legacy_deconv2d_support
@@ -78,6 +83,7 @@ class DependentConv2DTranspose(Conv2DTranspose):
                  strides=(1, 1),
                  padding='valid',
                  data_format=None,
+                 dilation_rate=None,
                  activation=None,
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
@@ -102,6 +108,7 @@ class DependentConv2DTranspose(Conv2DTranspose):
                                                        strides=strides,
                                                        padding=padding,
                                                        data_format=data_format,
+                                                       dilation_rate=dilation_rate,
                                                        activation=activation,
                                                        use_bias=use_bias,
                                                        kernel_initializer=kernel_initializer,
@@ -144,5 +151,5 @@ class DependentConv2DTranspose(Conv2DTranspose):
 
     def get_config(self):
         config = super(Conv2DTranspose, self).get_config()
-        config.pop('dilation_rate')  # TODO: why? find usage
-        return config
+        base_config = super(DependentConv2DTranspose, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
