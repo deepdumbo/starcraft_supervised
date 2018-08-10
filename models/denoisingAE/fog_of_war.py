@@ -24,7 +24,7 @@ from logger import create_logger
 
 player_name = '박성균'
 output_size = 128
-data_dir = 'Y:/trainingData_v9/data(선수별)/{}/{}/'.format(player_name, output_size)
+data_dir = 'Y:/trainingData_v9/data(replay)/{}/{}/'.format(player_name, output_size)
 
 save_formats = ['pkl', 'npy', 'h5']
 save_format = save_formats[0]
@@ -110,7 +110,9 @@ def apply_fog_of_war(sample, sample_info, me, output_size=128):
     assert (x_fog.shape == x_original.shape)
     assert isinstance(x_fog, np.ndarray) and isinstance(x_original, np.ndarray)
 
+    x_fog = x_fog.reshape(sample.shape)
     x_fog = sp.csr_matrix(x_fog.astype(np.uint8))
+    x_original = x_original.reshape(sample.shape)
     x_original = sp.csr_matrix(x_original.astype(np.uint8))
     assert isinstance(x_fog, sp.csr_matrix) and isinstance(x_original, sp.csr_matrix)
 

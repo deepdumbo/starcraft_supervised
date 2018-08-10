@@ -78,7 +78,7 @@ def get_channel_index(filepath, channel_type='buildings'):
 
 def get_single_pair_from_pkl(filepath, fog=True, output_size=128):
     """Read a single sample, a dictionary of 2 scipy.sparse.csr_matrices, from .pkl file."""
-    
+
     assert os.path.isfile(filepath)  # A full path must be provided
     with open(filepath, 'rb') as f:
         sample_dict = pickle.load(f)
