@@ -11,7 +11,7 @@ import numpy as np
 import tensorflow as tf
 
 import keras
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, CSVLogger
 from keras.optimizers import Adam
 from keras.utils import multi_gpu_model
 
@@ -19,7 +19,7 @@ from ae import convolutional_encoder_decoder
 from train_utils import generate_batches_from_directory, get_steps_per_epoch
 
 num_classes = 2
-batch_size = 64
+batch_size = 32
 epochs = 1
 learning_rate = 0.001
 shape = (128, 128, 49)
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     model.compile(optimizer=Adam(lr=learning_rate),
                   loss='mse')
 
-    # TODO: Add more callbacks
+    # Callbacks
     callbacks = []
     checkpoint_dir = './checkpoints/'
     if not os.path.isdir(checkpoint_dir):
@@ -42,26 +42,23 @@ if __name__ == '__main__':
                             save_weights_only=True)
     callbacks.append(check)
 
-    data_dir = 'D:/parsingData/parsingData_v4/by_sample_npy/'
+    csv_logger = CSVLogger('./logs/training.log')
+    callbacks.append(csv_logger)
 
-    total_size = len(os.listdir(data_dir))
+    # Train
+    train_dir = 'D:/parsingData/trainingData_v9/train/'
+    test_dir  = 'D:/parsingData/trainingData_v9/test/'
 
-    train_start = 0
-    train_end = int(total_size * 0.5)
-    valid_start = train_end
-    valid_end = total_size
+    generator_train = generate_batches_from_directory(path_to_dir=train_dir,
+                                                      file_format='pkl',
+                                                      batch_size=batch_size)
 
-    generator_train = generate_batches_from_directory(path_to_dir=data_dir,
-                                                      batch_size=batch_size,
-                                                      start=train_start,
-                                                      end=train_end)
-    generator_valid = generate_batches_from_directory(path_to_dir=data_dir,
-                                                      batch_size=batch_size,
-                                                      start=valid_start,
-                                                      end=valid_end)
+    generator_valid = generate_batches_from_directory(path_to_dir=test_dir,
+                                                      file_format='pkl',
+                                                      batch_size=batch_size)
 
-    steps_per_epoch_train = get_steps_per_epoch(train_end, batch_size)
-    steps_per_epoch_valid = get_steps_per_epoch(total_size - train_end, batch_size)
+    steps_per_epoch_train = get_steps_per_epoch(len(os.listdir(train_dir)), batch_size)
+    steps_per_epoch_valid = get_steps_per_epoch(len(os.listdir(test_dir)), batch_size)
 
     try:
         # FIXME: validation data results in error after single epoch
@@ -69,8 +66,8 @@ if __name__ == '__main__':
                             steps_per_epoch=steps_per_epoch_train,
                             epochs=epochs,
                             max_queue_size=batch_size * 4,
-                            #validation_data=generator_valid,
-                            #validation_steps=steps_per_epoch_valid,
+                            validation_data=generator_valid,
+                            validation_steps=steps_per_epoch_valid,
                             callbacks=callbacks,
                             workers=6,
                             verbose=1)
@@ -82,4 +79,4 @@ if __name__ == '__main__':
             os.makedirs(savedir)
         single_model = [l for l in model.layers if l.name == 'model_1']
         assert len(single_model) == 1; single_model = single_model[0]
-        single_model.save_weights(os.path.join(savedir, 'weights_epochs_{}.h5'.format(epochs)))
+        single_model.save_weights(os.path.join(savedir, 'weights.h5'))

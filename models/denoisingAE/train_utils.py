@@ -137,7 +137,7 @@ def get_single_pair_from_h5(filepath, fog=True):
         return x_original.astype(np.float32), x_original.astype(np.float32)
 
 
-def generate_batches_from_directory(path_to_dir, file_format,
+def generate_batches_from_directory(path_to_dir, file_format='pkl',
                                     start=None, end=None,
                                     batch_size=32, output_size=128):
     """Data generator to be used in the 'fit_generator' method."""
