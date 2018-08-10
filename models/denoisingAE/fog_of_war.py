@@ -66,11 +66,7 @@ def get_my_id(replay_info, token):
 
 
 def apply_fog_of_war(sample, sample_info, me, output_size=128):
-    """
-    Mask values with zero for opponent's units not yet exposed.\n
-    Returns:\n
-        a tuple of two numpy arrays, each of shape [H, W, C].
-    """
+    '''Mask values with zero for opponent's units not yet exposed.\n'''
     assert isinstance(sample, sp.csr_matrix)
     assert isinstance(sample_info, dict)
     assert me in [0, 1]
@@ -114,7 +110,11 @@ def apply_fog_of_war(sample, sample_info, me, output_size=128):
     assert (x_fog.shape == x_original.shape)
     assert isinstance(x_fog, np.ndarray) and isinstance(x_original, np.ndarray)
 
-    return x_fog.astype(np.uint8), x_original.astype(np.uint8)
+    x_fog = sp.csr_matrix(x_fog.astype(np.uint8))
+    x_original = sp.csr_matrix(x_original.astype(np.uint8))
+    assert isinstance(x_fog, sp.csr_matrix) and isinstance(x_original, sp.csr_matrix)
+
+    return x_fog, x_original
 
 
 def apply_fog_of_war_v2(sample, sample_info, me, output_size=128):
