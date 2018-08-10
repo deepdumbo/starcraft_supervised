@@ -83,7 +83,7 @@ class DependentConv2DTranspose(Conv2DTranspose):
                  strides=(1, 1),
                  padding='valid',
                  data_format=None,
-                 dilation_rate=None,
+                 dilation_rate=(1, 1),
                  activation=None,
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
@@ -150,6 +150,7 @@ class DependentConv2DTranspose(Conv2DTranspose):
         self.built = True
 
     def get_config(self):
-        config = super(Conv2DTranspose, self).get_config()
+        config = {'master_layer': self._master_layer}
         base_config = super(DependentConv2DTranspose, self).get_config()
+        base_config.pop('dilation_rate')
         return dict(list(base_config.items()) + list(config.items()))

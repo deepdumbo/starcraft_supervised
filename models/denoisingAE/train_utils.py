@@ -89,8 +89,8 @@ def get_single_pair_from_pkl(filepath, fog=True, output_size=128):
     channel_index = np.array(channel_index, dtype=np.int8)
 
     if fog:  # input: fog, output: original
-        x_fog = sample_dict.get('fog').toarray()
-        x_original = sample_dict.get('original').toarray()
+        x_fog = sample_dict.get('fog')
+        x_original = sample_dict.get('original')
 
         assert int(np.sqrt(x_fog.shape[0])) == output_size
         assert int(np.sqrt(x_original.shape[0])) == output_size

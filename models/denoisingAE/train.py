@@ -19,15 +19,15 @@ from ae import convolutional_encoder_decoder
 from train_utils import generate_batches_from_directory, get_steps_per_epoch
 
 num_classes = 2
-batch_size = 32
-epochs = 1
+batch_size = 64
+epochs = 2
 learning_rate = 0.001
 shape = (128, 128, 34)
 
 if __name__ == '__main__':
 
     model = convolutional_encoder_decoder(input_shape=shape)
-    model = multi_gpu_model(model, gpus=4, cpu_merge=False)
+    model = multi_gpu_model(model, gpus=2, cpu_merge=False)
     model.compile(optimizer=Adam(lr=learning_rate),
                   loss='mse')
 
@@ -48,6 +48,8 @@ if __name__ == '__main__':
     # Train
     train_dir = 'D:/parsingData/trainingData_v9/train/'
     test_dir  = 'D:/parsingData/trainingData_v9/test/'
+    train_dir = 'Y:/trainingData_v9/train/'
+    test_dir  = 'Y:/trainingData_v9/test/'
 
     generator_train = generate_batches_from_directory(path_to_dir=train_dir,
                                                       file_format='pkl',
