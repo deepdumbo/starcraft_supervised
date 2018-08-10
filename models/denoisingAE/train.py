@@ -22,7 +22,7 @@ num_classes = 2
 batch_size = 32
 epochs = 1
 learning_rate = 0.001
-shape = (128, 128, 49)
+shape = (128, 128, 34)
 
 if __name__ == '__main__':
 
