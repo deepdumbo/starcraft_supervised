@@ -26,18 +26,20 @@ shape = (128, 128, 34)
 
 if __name__ == '__main__':
 
+    now = datetime.datetime.now().strftime("%Y%m%d")
+
     model = convolutional_encoder_decoder(input_shape=shape)
-    model = multi_gpu_model(model, gpus=2, cpu_merge=False)
+    model = multi_gpu_model(model, gpus=4, cpu_merge=False)
     model.compile(optimizer=Adam(lr=learning_rate),
                   loss='mse')
 
     # Callbacks
     callbacks = []
-    checkpoint_dir = './checkpoints/'
+    checkpoint_dir = './checkpoints/{}'.format(now)
     if not os.path.isdir(checkpoint_dir):
         os.makedirs(checkpoint_dir)
-    check = ModelCheckpoint(filepath=os.path.join(checkpoint_dir, 'trained_dae.h5'),
-                            monitor='loss',
+    check = ModelCheckpoint(filepath=os.path.join(checkpoint_dir, 'trained_weights.h5'),
+                            monitor='val_loss',
                             save_best_only=True,
                             save_weights_only=True)
     callbacks.append(check)
@@ -46,10 +48,10 @@ if __name__ == '__main__':
     callbacks.append(csv_logger)
 
     # Train
-    train_dir = 'D:/parsingData/trainingData_v9/train/'
-    test_dir  = 'D:/parsingData/trainingData_v9/test/'
     train_dir = 'Y:/trainingData_v9/train/'
     test_dir  = 'Y:/trainingData_v9/test/'
+    train_dir = 'D:/parsingData/trainingData_v9/train/'
+    test_dir  = 'D:/parsingData/trainingData_v9/test/'
 
     generator_train = generate_batches_from_directory(path_to_dir=train_dir,
                                                       file_format='pkl',
@@ -60,10 +62,10 @@ if __name__ == '__main__':
                                                       batch_size=batch_size)
 
     steps_per_epoch_train = get_steps_per_epoch(len(os.listdir(train_dir)), batch_size)
-    steps_per_epoch_valid = get_steps_per_epoch(len(os.listdir(test_dir)), batch_size)
+    steps_per_epoch_valid = get_steps_per_epoch(len(os.listdir(test_dir)), int(batch_size / 2))
 
     try:
-        # FIXME: validation data results in error after single epoch
+        # FIXME: use fit_on_batch and 'keras.Sequence' instance
         model.fit_generator(generator=generator_train,
                             steps_per_epoch=steps_per_epoch_train,
                             epochs=epochs,

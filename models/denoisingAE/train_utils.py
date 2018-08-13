@@ -178,7 +178,13 @@ def generate_batches_from_directory(path_to_dir, file_format='pkl',
             batch_end = min(batch_start + batch_size, num_samples - 1)
 
             filenames_batch = filenames[batch_start:batch_end]
-            pairs_batch = [get_single_pair(filepath=x) for x in filenames_batch]
+
+            while True:
+                try:
+                    pairs_batch = [get_single_pair(filepath=x) for x in filenames_batch]
+                    break
+                except Error as e:
+                    continue
 
             X_fog =[pair[0] for pair in pairs_batch]
             X_fog = np.stack(X_fog, axis=0)
