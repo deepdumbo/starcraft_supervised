@@ -13,7 +13,7 @@ import tensorflow as tf
 import keras
 import keras.backend as K
 
-from keras.callbacks import ModelCheckpoint, CSVLogger
+from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping
 from keras.optimizers import Adam
 from keras.utils import multi_gpu_model
 
@@ -22,7 +22,7 @@ from train_utils import generate_batches_from_directory
 from train_utils import get_steps_per_epoch
 
 batch_size = 128
-epochs = 30
+epochs = 300
 learning_rate = 0.001
 input_shape = (128, 128, 34)
 
@@ -38,14 +38,14 @@ def save(multi_gpu_model, checkpoint_dir, save_multi=True, save_single=True):
         # Save weights to weight directory (multi-gpu model)
         weight_dir = './weights/'
         os.makedirs(os.path.join(weight_dir, 'multi/'), exist_ok=True)
-        model.save_weights(
+        multi_gpu_model.save_weights(
             filepath=os.path.join(weight_dir, 'multi_gpu_weights_{}.h5'.format(now))
         )
         print('>>> Saved multi-gpu model weights...')
 
     if save_single:
         # Save weights to weight directory (single-gpu model)
-        single_model = [l for l in model.layers if l.name == 'model_1']
+        single_model = [l for l in multi_gpu_model.layers if l.name == 'model_1']
         single_model = single_model[0]
         os.makedirs(os.path.join(weight_dir, 'single/'), exist_ok=True)
         single_model.save_weights(
@@ -79,6 +79,11 @@ if __name__ == '__main__':
     os.makedirs(log_dir, exist_ok=True)
     csv_logger = CSVLogger(os.path.join(log_dir, 'train.log'))
     callbacks.append(csv_logger)
+
+    early = EarlyStopping(monitor='val_loss',
+                          patience=9,
+                          verbose=1)
+    callbacks.append(early)
 
     # Train
     train_dir = 'D:/parsingData/trainingData_v9/train/'
