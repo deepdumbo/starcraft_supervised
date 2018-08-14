@@ -11,24 +11,56 @@ import numpy as np
 import tensorflow as tf
 
 import keras
+import keras.backend as K
+
 from keras.callbacks import ModelCheckpoint, CSVLogger
 from keras.optimizers import Adam
 from keras.utils import multi_gpu_model
 
 from ae import convolutional_encoder_decoder
-from train_utils import generate_batches_from_directory, get_steps_per_epoch
+from train_utils import generate_batches_from_directory
+from train_utils import get_steps_per_epoch
 
-num_classes = 2
-batch_size = 64
-epochs = 2
+batch_size = 128
+epochs = 30
 learning_rate = 0.001
-shape = (128, 128, 34)
+input_shape = (128, 128, 34)
+
+
+def save(multi_gpu_model, checkpoint_dir, save_multi=True, save_single=True):
+
+    # Load best checkpoint weights
+    model.load_weights(
+        filepath=os.path.join(checkpoint_dir, 'trained_weights.h5')
+    )
+
+    if save_multi:
+        # Save weights to weight directory (multi-gpu model)
+        weight_dir = './weights/'
+        os.makedirs(os.path.join(weight_dir, 'multi/'), exist_ok=True)
+        model.save_weights(
+            filepath=os.path.join(weight_dir, 'multi_gpu_weights_{}.h5'.format(now))
+        )
+        print('>>> Saved multi-gpu model weights...')
+
+    if save_single:
+        # Save weights to weight directory (single-gpu model)
+        single_model = [l for l in model.layers if l.name == 'model_1']
+        single_model = single_model[0]
+        os.makedirs(os.path.join(weight_dir, 'single/'), exist_ok=True)
+        single_model.save_weights(
+            filepath=os.path.join(weight_dir, 'single_gpu_weights_{}.h5'.format(now))
+        )
+        print('>>> Saved single-gpu model weights...')
+
 
 if __name__ == '__main__':
 
-    now = datetime.datetime.now().strftime("%Y%m%d")
+    # TODO: Allow GPU usage growth
 
-    model = convolutional_encoder_decoder(input_shape=shape)
+    now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    model = convolutional_encoder_decoder(input_shape=input_shape)
     model = multi_gpu_model(model, gpus=4, cpu_merge=False)
     model.compile(optimizer=Adam(lr=learning_rate),
                   loss='mse')
@@ -36,20 +68,19 @@ if __name__ == '__main__':
     # Callbacks
     callbacks = []
     checkpoint_dir = './checkpoints/{}'.format(now)
-    if not os.path.isdir(checkpoint_dir):
-        os.makedirs(checkpoint_dir)
+    os.makedirs(checkpoint_dir, exist_ok=True)
     check = ModelCheckpoint(filepath=os.path.join(checkpoint_dir, 'trained_weights.h5'),
                             monitor='val_loss',
                             save_best_only=True,
                             save_weights_only=True)
     callbacks.append(check)
 
-    csv_logger = CSVLogger('./logs/training.log')
+    log_dir = './logs/'
+    os.makedirs(log_dir, exist_ok=True)
+    csv_logger = CSVLogger(os.path.join(log_dir, 'train.log'))
     callbacks.append(csv_logger)
 
     # Train
-    train_dir = 'Y:/trainingData_v9/train/'
-    test_dir  = 'Y:/trainingData_v9/test/'
     train_dir = 'D:/parsingData/trainingData_v9/train/'
     test_dir  = 'D:/parsingData/trainingData_v9/test/'
 
@@ -66,21 +97,26 @@ if __name__ == '__main__':
 
     try:
         # FIXME: use fit_on_batch and 'keras.Sequence' instance
-        model.fit_generator(generator=generator_train,
-                            steps_per_epoch=steps_per_epoch_train,
-                            epochs=epochs,
-                            max_queue_size=batch_size * 4,
-                            validation_data=generator_valid,
-                            validation_steps=steps_per_epoch_valid,
-                            callbacks=callbacks,
-                            workers=6,
-                            verbose=1)
+        history = model.fit_generator(generator=generator_train,
+                                      steps_per_epoch=steps_per_epoch_train,
+                                      epochs=epochs,
+                                      max_queue_size=batch_size * 4,
+                                      validation_data=generator_valid,
+                                      validation_steps=steps_per_epoch_valid,
+                                      callbacks=callbacks,
+                                      workers=6,
+                                      verbose=1)
     except KeyboardInterrupt:
-        # Save model & weights
-        now = datetime.datetime.now().strftime("%Y%m%d")
-        savedir = './trained_models/{}/'.format(now)
-        if not os.path.isdir(savedir):
-            os.makedirs(savedir)
-        single_model = [l for l in model.layers if l.name == 'model_1']
-        assert len(single_model) == 1; single_model = single_model[0]
-        single_model.save_weights(os.path.join(savedir, 'weights.h5'))
+
+        try:
+            # TODO: save model architecture as well (use CustomObjectScope)
+            save(multi_gpu_model=model,
+                 save_multi=True,
+                 save_single=True)
+        except FileNotFoundError as e:
+            print(str(e))
+
+    # Save model weights
+    save(multi_gpu_model=model,
+         save_multi=True,
+         save_single=True)
