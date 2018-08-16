@@ -12,7 +12,7 @@ from keras.engine.topology import Input
 from keras.layers.core import Lambda
 from keras.layers.convolutional import Conv2D
 from keras.layers.normalization import BatchNormalization
-from keras.layers.advanced_activations import LeakyReLU
+from keras.layers.advanced_activations import LeakyReLU, ReLU
 
 from layers import DependentConv2DTranspose
 
@@ -134,7 +134,7 @@ def convolutional_encoder_decoder(input_shape, use_bias=False):
             b1_convt2_act = LeakyReLU(name=ns+'act2')(b1_convt2)
             b1_convt1 = DependentConv2DTranspose(filters=input_shape[-1], kernel_size=3, strides=1, master_layer=b1_conv1,
                                                  padding='same', use_bias=use_bias, name=ns+'convt1')(b1_convt2_act)
-            b1_convt1_act = LeakyReLU(name=ns+'act1')(b1_convt1)
+            b1_convt1_act = ReLU(name=ns+'act1')(b1_convt1)
             b1_t_out = Lambda(lambda x: x, name=ns+'out')(b1_convt1_act)
 
     img_output = Lambda(lambda x: x, name='output')(b1_t_out)

@@ -21,7 +21,7 @@ from ae import convolutional_encoder_decoder
 from train_utils import generate_batches_from_directory
 from train_utils import get_steps_per_epoch
 
-batch_size = 128
+batch_size = 64
 epochs = 300
 learning_rate = 0.001
 input_shape = (128, 128, 34)
@@ -75,9 +75,7 @@ if __name__ == '__main__':
                             save_weights_only=True)
     callbacks.append(check)
 
-    log_dir = './logs/'
-    os.makedirs(log_dir, exist_ok=True)
-    csv_logger = CSVLogger(os.path.join(log_dir, 'train.log'))
+    csv_logger = CSVLogger(os.path.join(checkpoint_dir, 'train.log'))
     callbacks.append(csv_logger)
 
     early = EarlyStopping(monitor='val_loss',

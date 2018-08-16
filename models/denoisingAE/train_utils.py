@@ -182,14 +182,16 @@ def generate_batches_from_directory(path_to_dir, file_format='pkl',
             while True:
                 try:
                     pairs_batch = [get_single_pair(filepath=x) for x in filenames_batch]
-                    X_fog = [pair[0] for pair in pairs_batch]
-                    X_fog = np.stack(X_fog, axis=0)
-                    X_original = [pair[1] for pair in pairs_batch]
-                    X_original = np.stack(X_original, axis=0)
+
                     break
 
                 except Error as e:
                     continue
+
+            X_fog = [pair[0] for pair in pairs_batch]
+            X_fog = np.stack(X_fog, axis=0)
+            X_original = [pair[1] for pair in pairs_batch]
+            X_original = np.stack(X_original, axis=0)
 
             yield (X_fog, X_original)
 
